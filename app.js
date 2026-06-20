@@ -31,22 +31,8 @@ searchBox.addEventListener("input", () => {
   }, 600);
 });
 
-// window.addEventListener("load", async () => {
-//   const res = await fetch("https://ip-api.com/json/");
-//   const data = await res.json();
-//   checkweather(apiUrl + `lat=${data.lat}&lon=${data.lon}&appid=${apiKey}`);
-// });
-
-// window.addEventListener("load", async () => {
-//   const res = await fetch("https://ip-api.com/json/");
-//   const data = await res.json();
-//   console.log(data);
-//   checkweather(apiUrl + `lat=${data.lat}&lon=${data.lon}&appid=${apiKey}`);
-// });
-
-window.addEventListener("load", async () => {
-  const res = await fetch("https://ipwho.is/");
-  const data = await res.json();
-  console.log(data);
-  checkweather(apiUrl + `lat=${data.latitude}&lon=${data.longitude}&appid=${apiKey}`);
+window.addEventListener("load", () => {
+  navigator.geolocation.getCurrentPosition((position) => {
+    checkweather(apiUrl + `lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=${apiKey}`);
+  });
 });
