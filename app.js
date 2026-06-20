@@ -28,7 +28,7 @@ searchBox.addEventListener("input", () => {
     if (searchBox.value.trim()) {
       checkweather(apiUrl + `q=${searchBox.value.trim()}&appid=${apiKey}`);
     }
-  }, 600);
+  }, 500);
 });
 
 // it needs paid api to detect your location
