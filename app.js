@@ -43,6 +43,40 @@ async function checkweather(cityQuery) {
 
   setBackground(data.weather[0].main);
   fetchForecast(cityQuery);
+
+  // smart tip
+  const temp = data.main.temp;
+  const humidity = data.main.humidity;
+  const wind = data.wind.speed;
+  const condition = data.weather[0].main;
+
+  let tip = "";
+
+  if (
+    condition === "Rain" ||
+    condition === "Drizzle" ||
+    condition === "Thunderstorm"
+  ) {
+    tip = "🌂 Carry an umbrella today";
+  } else if (condition === "Snow") {
+    tip = "🧤 Bundle up, it's snowing";
+  } else if (temp >= 40) {
+    tip = "🥵 Scorching heat, stay hydrated";
+  } else if (temp >= 30) {
+    tip = "☀️ Hot outside, wear a hat and sunscreen";
+  } else if (temp <= 5) {
+    tip = "🧥 Freezing cold, wear a heavy jacket";
+  } else if (temp <= 15) {
+    tip = "🧣 Chilly outside, carry a jacket";
+  } else if (humidity >= 80) {
+    tip = "💧 Very humid, feels hotter than it looks";
+  } else if (wind >= 20) {
+    tip = "💨 Strong winds, hold onto your hat";
+  } else {
+    tip = "😊 Pleasant weather, enjoy your day";
+  }
+
+  document.querySelector(".tip").innerHTML = tip;
 }
 
 async function fetchForecast(cityQuery) {
@@ -91,7 +125,7 @@ function setBackground(condition) {
     createSun();
   } else if (condition === "Clouds") {
     document.body.classList.add("clouds");
-    createClouds(6);
+    createClouds(9);
   } else if (condition === "Rain") {
     document.body.classList.add("rain");
     createDrops(80, "raindrop");
@@ -121,10 +155,35 @@ function createClouds(count) {
   for (let i = 0; i < count; i++) {
     const cloud = document.createElement("div");
     cloud.classList.add("cloud");
-    cloud.style.top = Math.random() * 60 + "vh";
-    cloud.style.animationDuration = Math.random() * 20 + 15 + "s";
-    cloud.style.animationDelay = Math.random() * 10 + "s";
-    cloud.style.opacity = Math.random() * 0.5 + 0.3;
+
+    // main cloud body
+    cloud.style.top = Math.random() * 100 + "vh";
+    cloud.style.animationDuration = Math.random() * 15 + 10 + "s";
+    cloud.style.animationDelay = "-" + Math.random() * 15 + "s";
+    cloud.style.opacity = Math.random() * 0.4 + 0.4;
+    cloud.style.transform = `scale(${Math.random() * 0.8 + 0.6})`;
+
+    // add bumps on top to make it look like a real cloud
+    const bumps = [
+      { width: "80px", height: "80px", top: "-40px", left: "20px" },
+      { width: "100px", height: "100px", top: "-55px", left: "60px" },
+      { width: "70px", height: "70px", top: "-35px", left: "130px" },
+    ];
+
+    bumps.forEach((b) => {
+      const bump = document.createElement("div");
+      bump.style.cssText = `
+        position: absolute;
+        background: rgba(255,255,255,0.18);
+        border-radius: 50%;
+        width: ${b.width};
+        height: ${b.height};
+        top: ${b.top};
+        left: ${b.left};
+      `;
+      cloud.appendChild(bump);
+    });
+
     bgAnimation.appendChild(cloud);
   }
 }
@@ -166,17 +225,19 @@ function createLightning() {
 }
 
 function createMist() {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 8; i++) {
     const layer = document.createElement("div");
     layer.classList.add("mistlayer");
-    layer.style.top = i * 20 + "vh";
-    layer.style.animationDuration = Math.random() * 10 + 10 + "s";
-    layer.style.animationDelay = Math.random() * 5 + "s";
+    layer.style.top = (i * 12) + "vh";
+    layer.style.animationDuration = (Math.random() * 15 + 10) + "s";
+    layer.style.animationDelay = "-" + (Math.random() * 10) + "s";
+    layer.style.opacity = Math.random() * 0.3 + 0.15;
     bgAnimation.appendChild(layer);
   }
 }
 
 window.addEventListener("load", () => {
+  searchBox.value = "";
   checkweather("q=Delhi");
 });
 
