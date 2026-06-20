@@ -82,8 +82,13 @@ async function checkweather(cityQuery) {
 function toggleTemp() {
   isCelsius = !isCelsius;
   tempEl.innerHTML = isCelsius
-  ? currentTempC + `<span class="unit">°c</span>`
-  : Math.round((currentTempC * 9) / 5 + 32) + `<span class="unit">°f</span>`;
+    ? currentTempC + `<span class="unit">°c</span>`
+    : Math.round((currentTempC * 9) / 5 + 32) + `<span class="unit">°f</span>`;
+
+  document.querySelectorAll(".day-temp").forEach((el) => {
+    const c = parseInt(el.dataset.tempc);
+    el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
+  });
 }
 
 // show/hide error
@@ -125,7 +130,7 @@ async function fetchForecast(cityQuery) {
       div.innerHTML = `
       <span class="day-name">${day}</span>
       <i class="${getIcon(condition)}"></i>
-      <span class="day-temp">${temp}°c</span>
+      <span class="day-temp" data-tempc="${temp}">${temp}°c</span>
       <span class="day-condition">${condition}</span>
     `;
       forecastEl.appendChild(div);
