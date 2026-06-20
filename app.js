@@ -33,15 +33,5 @@ searchBox.addEventListener("input", () => {
 
 // it needs paid api to detect your location
 window.addEventListener("load", () => {
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      checkweather(
-        apiUrl +
-          `lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=${apiKey}`,
-      );
-    },
-    () => {
-      checkweather(apiUrl + `q=Delhi&appid=${apiKey}`);
-    },
-  );
+  checkweather(apiUrl + `q=Delhi&appid=${apiKey}`);
 });
