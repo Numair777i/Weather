@@ -37,9 +37,16 @@ searchBox.addEventListener("input", () => {
 //   checkweather(apiUrl + `lat=${data.lat}&lon=${data.lon}&appid=${apiKey}`);
 // });
 
+// window.addEventListener("load", async () => {
+//   const res = await fetch("https://ip-api.com/json/");
+//   const data = await res.json();
+//   console.log(data);
+//   checkweather(apiUrl + `lat=${data.lat}&lon=${data.lon}&appid=${apiKey}`);
+// });
+
 window.addEventListener("load", async () => {
-  const res = await fetch("https://ip-api.com/json/");
+  const res = await fetch("https://ipwho.is/");
   const data = await res.json();
   console.log(data);
-  checkweather(apiUrl + `lat=${data.lat}&lon=${data.lon}&appid=${apiKey}`);
+  checkweather(apiUrl + `lat=${data.latitude}&lon=${data.longitude}&appid=${apiKey}`);
 });
