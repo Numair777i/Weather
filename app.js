@@ -41,8 +41,7 @@ window.addEventListener("load", () => {
       );
     },
     () => {
-      document.querySelector(".city").innerHTML =
-        "Allow location or search a city";
+      checkweather(apiUrl + `q=Delhi&appid=${apiKey}`);
     },
   );
 });
