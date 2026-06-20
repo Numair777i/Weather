@@ -1,27 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
 * {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: "Inter", sans-serif;
   box-sizing: border-box;
 }
 
-html {
-  background: inherit;
+html,
+body {
+  min-height: 100vh;
+  background: #1a1a2e;
 }
 
 body {
-  transition: background 1s ease;
-  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: none;
-  min-height: 100vh;
-  background: #1a1a2e;
+  transition: background 1s ease;
 }
 
+/* weather backgrounds */
 body.clear {
   background: linear-gradient(to bottom, #f7b733, #fc4a1a);
 }
@@ -44,6 +46,7 @@ body.mist {
   background: linear-gradient(to bottom, #8e9eab, #b0bec5);
 }
 
+/* animated bg container */
 #bg-animation {
   position: fixed;
   top: 0;
@@ -55,6 +58,7 @@ body.mist {
   overflow: hidden;
 }
 
+/* particles */
 .particle {
   position: absolute;
   top: -20px;
@@ -76,8 +80,6 @@ body.mist {
   animation-name: fall;
 }
 .snowflake {
-  width: 8px;
-  height: 8px;
   background: white;
   border-radius: 50%;
   opacity: 0.8;
@@ -184,6 +186,7 @@ body.mist {
   }
 }
 
+/* card - liquid glass */
 .card {
   position: relative;
   z-index: 1;
@@ -191,7 +194,7 @@ body.mist {
   max-width: 900px;
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
   color: #fff;
   margin: 0 auto;
   padding: 30px 35px;
@@ -205,11 +208,11 @@ body.mist {
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* search bar */
 .search {
   width: 100%;
   margin-bottom: 30px;
 }
-
 .search input {
   border: 0;
   outline: 0;
@@ -221,17 +224,40 @@ body.mist {
   width: 100%;
   font-size: 16px;
 }
-
 .search input::placeholder {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* search loading pulse */
+.search input.loading {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  animation: inputpulse 1s ease-in-out infinite;
+}
+@keyframes inputpulse {
+  0%,
+  100% {
+    outline-color: rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    outline-color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* error */
+.error {
+  display: none;
+  color: rgba(255, 100, 100, 0.9);
+  font-size: 13px;
+  margin-top: 6px;
+  margin-left: 5px;
+}
+
+/* layout */
 .main {
   display: flex;
   gap: 30px;
   align-items: flex-start;
 }
-
 .today {
   flex: 1;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
@@ -241,15 +267,22 @@ body.mist {
   flex-direction: column;
 }
 
+/* today weather */
 .today .city {
   font-size: 32px;
   font-weight: 400;
 }
 .today .temp {
+  cursor: pointer;
   font-size: 80px;
-  font-weight: 500;
+  font-weight: 300;
   line-height: 1;
   margin: 10px 0;
+  display: inline-block;
+  transition: opacity 0.2s;
+}
+.today .temp:hover {
+  opacity: 0.8;
 }
 .today .condition {
   font-size: 20px;
@@ -257,6 +290,7 @@ body.mist {
   margin-bottom: 30px;
 }
 
+/* humidity and wind */
 .details {
   display: flex;
   gap: 20px;
@@ -275,13 +309,23 @@ body.mist {
   font-size: 20px;
 }
 
+/* smart tip */
+.tip {
+  margin-top: 15px;
+  font-size: 15px;
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 15px;
+  border-radius: 12px;
+}
+
+/* forecast */
 .forecast {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
-
 .forecast-day {
   display: flex;
   align-items: center;
@@ -289,8 +333,8 @@ body.mist {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 10px 15px;
+  gap: 10px;
 }
-
 .forecast-day .day-name {
   font-size: 16px;
   width: 80px;
@@ -309,110 +353,124 @@ body.mist {
   text-align: right;
 }
 
-.tip {
-  margin-top: 15px;
-  font-size: 15px;
-  opacity: 0.85;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 10px 15px;
-  border-radius: 12px;
-}
-
-/* Tablet */
+/* tablet */
 @media (max-width: 768px) {
   .card {
     width: 95%;
     padding: 20px 25px;
     margin: 40px auto;
   }
-
   .today .temp {
     font-size: 60px;
   }
-
   .today .city {
     font-size: 26px;
   }
-
   .forecast-day .day-name {
     width: 50px;
     font-size: 14px;
   }
-
   .forecast-day .day-condition {
     width: 60px;
     font-size: 12px;
   }
 }
 
-/* Mobile */
+/* mobile */
 @media (max-width: 480px) {
   body {
     align-items: flex-start;
   }
-
   .card {
     width: 100%;
     border-radius: 20px;
     margin: 20px auto;
     padding: 20px;
   }
-
   .main {
     flex-direction: column;
     gap: 20px;
   }
-
   .today {
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     padding-right: 0;
     padding-bottom: 20px;
   }
-
   .today .temp {
     font-size: 70px;
   }
-
   .today .city {
     font-size: 28px;
   }
-
   .forecast {
     flex-direction: column;
     gap: 10px;
   }
-
   .forecast-day {
     padding: 8px 12px;
-    gap: 10px;
   }
-
-  .forecast-day i {
-    margin-right: 5px;
-  }
-
   .forecast-day .day-name {
     width: 45px;
     font-size: 14px;
   }
-
   .forecast-day .day-condition {
     width: 70px;
     font-size: 12px;
   }
-
   .search input {
     font-size: 14px;
     height: 45px;
   }
-
   .col i {
     font-size: 24px;
   }
-
   .humidity,
   .wind {
     font-size: 16px;
   }
+}
+
+/* large screens */
+@media (min-width: 1200px) {
+  .card {
+    max-width: 1000px;
+  }
+  .today .temp {
+    font-size: 100px;
+  }
+  .today .city {
+    font-size: 40px;
+  }
+}
+
+/* small phones */
+@media (max-width: 375px) {
+  .card {
+    padding: 15px 10px;
+  }
+  .today .temp {
+    font-size: 60px;
+  }
+  .today .city {
+    font-size: 22px;
+  }
+  .forecast-day {
+    padding: 6px 10px;
+  }
+  .forecast-day .day-name {
+    width: 35px;
+    font-size: 12px;
+  }
+}
+
+.unit {
+  font-size: 35px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px;
+  padding: 5px 14px;
+  margin-left: 8px;
+  vertical-align: middle;
+  cursor: pointer;
 }

@@ -4,94 +4,112 @@ const forecastUrl =
   "https://api.openweathermap.org/data/2.5/forecast?units=metric&";
 const searchBox = document.querySelector(".search input");
 const bgAnimation = document.getElementById("bg-animation");
+const tempEl = document.querySelector(".temp");
 
-// maps OWM condition to boxicon class
+// tracks current temp and unit
+let currentTempC = 0;
+let isCelsius = true;
+
+// click temp to toggle C/F
+tempEl.onclick = toggleTemp;
+
+// boxicon for each weather condition
 function getIcon(condition) {
-  switch (condition) {
-    case "Clear":
-      return "bx bx-sun";
-    case "Clouds":
-      return "bx bx-cloud";
-    case "Rain":
-      return "bx bx-cloud-rain";
-    case "Drizzle":
-      return "bx bx-cloud-drizzle";
-    case "Thunderstorm":
-      return "bx bx-cloud-lightning";
-    case "Snow":
-      return "bx bx-snow";
-    case "Mist":
-    case "Fog":
-    case "Haze":
-    case "Smoke":
-      return "bx bx-water";
-    default:
-      return "bx bx-cloud";
-  }
+  const icons = {
+    Clear: "bx bx-sun",
+    Clouds: "bx bx-cloud",
+    Rain: "bx bx-cloud-rain",
+    Drizzle: "bx bx-cloud-drizzle",
+    Thunderstorm: "bx bx-cloud-lightning",
+    Snow: "bx bx-snow",
+    Mist: "bx bx-water",
+    Fog: "bx bx-water",
+    Haze: "bx bx-water",
+    Smoke: "bx bx-water",
+  };
+  return icons[condition] || "bx bx-cloud";
 }
 
+// fetch current weather
 async function checkweather(cityQuery) {
-  const res = await fetch(apiUrl + cityQuery + `&appid=${apiKey}`);
-  const data = await res.json();
-  console.log(data);
+  try {
+    const res = await fetch(apiUrl + cityQuery + `&appid=${apiKey}`);
+    const data = await res.json();
 
-  document.querySelector(".city").innerHTML = data.name;
-  document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°c";
-  document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
-  document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
-  document.querySelector(".condition").innerHTML = data.weather[0].main;
+    if (data.cod === "404" || data.cod === "400") {
+      showError("City not found. Try again.");
+      return;
+    }
 
-  setBackground(data.weather[0].main);
-  fetchForecast(cityQuery);
+    clearError();
 
-  // smart tip
-  const temp = data.main.temp;
-  const humidity = data.main.humidity;
-  const wind = data.wind.speed;
-  const condition = data.weather[0].main;
+    // update today's weather
+    document.querySelector(".city").innerHTML = data.name;
+    currentTempC = Math.round(data.main.temp);
+    isCelsius = true;
+    tempEl.innerHTML = currentTempC + `<span class="unit">°c</span>`;
+    document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
+    document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
+    document.querySelector(".condition").innerHTML = data.weather[0].main;
 
-  let tip = "";
+    // smart tip based on weather
+    const condition = data.weather[0].main;
+    const temp = data.main.temp;
+    const humidity = data.main.humidity;
+    const wind = data.wind.speed;
+    let tip = "";
 
-  if (
-    condition === "Rain" ||
-    condition === "Drizzle" ||
-    condition === "Thunderstorm"
-  ) {
-    tip = "🌂 Carry an umbrella today";
-  } else if (condition === "Snow") {
-    tip = "🧤 Bundle up, it's snowing";
-  } else if (temp >= 40) {
-    tip = "🥵 Scorching heat, stay hydrated";
-  } else if (temp >= 30) {
-    tip = "☀️ Hot outside, wear a hat and sunscreen";
-  } else if (temp <= 5) {
-    tip = "🧥 Freezing cold, wear a heavy jacket";
-  } else if (temp <= 15) {
-    tip = "🧣 Chilly outside, carry a jacket";
-  } else if (humidity >= 80) {
-    tip = "💧 Very humid, feels hotter than it looks";
-  } else if (wind >= 20) {
-    tip = "💨 Strong winds, hold onto your hat";
-  } else {
-    tip = "😊 Pleasant weather, enjoy your day";
+    if (["Rain", "Drizzle", "Thunderstorm"].includes(condition))
+      tip = "🌂 Carry an umbrella today";
+    else if (condition === "Snow") tip = "🧤 Bundle up, it's snowing";
+    else if (temp >= 40) tip = "🥵 Scorching heat, stay hydrated";
+    else if (temp >= 30) tip = "☀️ Hot outside, wear a hat and sunscreen";
+    else if (temp <= 5) tip = "🧥 Freezing cold, wear a heavy jacket";
+    else if (temp <= 15) tip = "🧣 Chilly outside, carry a jacket";
+    else if (humidity >= 80) tip = "💧 Very humid, feels hotter than it looks";
+    else if (wind >= 20) tip = "💨 Strong winds, hold onto your hat";
+    else tip = "😊 Pleasant weather, enjoy your day";
+
+    document.querySelector(".tip").innerHTML = tip;
+    setBackground(condition);
+    fetchForecast(cityQuery);
+  } catch (err) {
+    showError("Something went wrong. Try again.");
   }
-
-  document.querySelector(".tip").innerHTML = tip;
 }
 
+// toggle celsius / fahrenheit
+function toggleTemp() {
+  isCelsius = !isCelsius;
+  tempEl.innerHTML = isCelsius
+  ? currentTempC + `<span class="unit">°c</span>`
+  : Math.round((currentTempC * 9) / 5 + 32) + `<span class="unit">°f</span>`;
+}
+
+// show/hide error
+function showError(msg) {
+  const el = document.querySelector(".error");
+  el.innerHTML = msg;
+  el.style.display = "block";
+}
+function clearError() {
+  const el = document.querySelector(".error");
+  el.innerHTML = "";
+  el.style.display = "none";
+}
+
+// fetch 5 day forecast
 async function fetchForecast(cityQuery) {
   const res = await fetch(forecastUrl + cityQuery + `&appid=${apiKey}`);
   const data = await res.json();
 
-  // OWM gives data every 3 hours, pick one reading per day (noon)
+  // pick one reading per day around noon
   const daily = {};
   data.list.forEach((item) => {
     const date = new Date(item.dt * 1000);
     const day = date.toLocaleDateString("en-US", { weekday: "short" });
     const hour = date.getHours();
-    if (!daily[day] && hour >= 11 && hour <= 14) {
-      daily[day] = item;
-    }
+    if (!daily[day] && hour >= 11 && hour <= 14) daily[day] = item;
   });
 
   const forecastEl = document.getElementById("forecast");
@@ -102,13 +120,11 @@ async function fetchForecast(cityQuery) {
     .forEach(([day, item]) => {
       const condition = item.weather[0].main;
       const temp = Math.round(item.main.temp);
-      const icon = getIcon(condition);
-
       const div = document.createElement("div");
       div.classList.add("forecast-day");
       div.innerHTML = `
       <span class="day-name">${day}</span>
-      <i class="${icon}"></i>
+      <i class="${getIcon(condition)}"></i>
       <span class="day-temp">${temp}°c</span>
       <span class="day-condition">${condition}</span>
     `;
@@ -116,6 +132,7 @@ async function fetchForecast(cityQuery) {
     });
 }
 
+// set animated background based on condition
 function setBackground(condition) {
   document.body.className = "";
   bgAnimation.innerHTML = "";
@@ -155,32 +172,20 @@ function createClouds(count) {
   for (let i = 0; i < count; i++) {
     const cloud = document.createElement("div");
     cloud.classList.add("cloud");
-
-    // main cloud body
     cloud.style.top = Math.random() * 100 + "vh";
     cloud.style.animationDuration = Math.random() * 15 + 10 + "s";
     cloud.style.animationDelay = "-" + Math.random() * 15 + "s";
     cloud.style.opacity = Math.random() * 0.4 + 0.4;
     cloud.style.transform = `scale(${Math.random() * 0.8 + 0.6})`;
 
-    // add bumps on top to make it look like a real cloud
-    const bumps = [
+    // bumps to make clouds look realistic
+    [
       { width: "80px", height: "80px", top: "-40px", left: "20px" },
       { width: "100px", height: "100px", top: "-55px", left: "60px" },
       { width: "70px", height: "70px", top: "-35px", left: "130px" },
-    ];
-
-    bumps.forEach((b) => {
+    ].forEach((b) => {
       const bump = document.createElement("div");
-      bump.style.cssText = `
-        position: absolute;
-        background: rgba(255,255,255,0.18);
-        border-radius: 50%;
-        width: ${b.width};
-        height: ${b.height};
-        top: ${b.top};
-        left: ${b.left};
-      `;
+      bump.style.cssText = `position:absolute;background:rgba(255,255,255,0.18);border-radius:50%;width:${b.width};height:${b.height};top:${b.top};left:${b.left};`;
       cloud.appendChild(bump);
     });
 
@@ -228,26 +233,32 @@ function createMist() {
   for (let i = 0; i < 8; i++) {
     const layer = document.createElement("div");
     layer.classList.add("mistlayer");
-    layer.style.top = (i * 12) + "vh";
-    layer.style.animationDuration = (Math.random() * 15 + 10) + "s";
-    layer.style.animationDelay = "-" + (Math.random() * 10) + "s";
+    layer.style.top = i * 12 + "vh";
+    layer.style.animationDuration = Math.random() * 15 + 10 + "s";
+    layer.style.animationDelay = "-" + Math.random() * 10 + "s";
     layer.style.opacity = Math.random() * 0.3 + 0.15;
     bgAnimation.appendChild(layer);
   }
 }
 
+// on load clear search and show Delhi
 window.addEventListener("load", () => {
   searchBox.value = "";
   checkweather("q=Delhi");
 });
 
+// debounce search — waits 600ms after user stops typing
 let debounceTimer;
 searchBox.addEventListener("input", () => {
   clearTimeout(debounceTimer);
+  searchBox.classList.remove("loading");
   debounceTimer = setTimeout(() => {
     const cleanCity = searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
     if (cleanCity) {
-      checkweather(`q=${cleanCity}`);
+      searchBox.classList.add("loading");
+      checkweather(`q=${cleanCity}`).finally(() => {
+        searchBox.classList.remove("loading");
+      });
     }
   }, 600);
 });
