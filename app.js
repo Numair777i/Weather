@@ -31,8 +31,18 @@ searchBox.addEventListener("input", () => {
   }, 600);
 });
 
+// it needs paid api to detect your location
 window.addEventListener("load", () => {
-  navigator.geolocation.getCurrentPosition((position) => {
-    checkweather(apiUrl + `lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=${apiKey}`);
-  });
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      checkweather(
+        apiUrl +
+          `lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=${apiKey}`,
+      );
+    },
+    () => {
+      document.querySelector(".city").innerHTML =
+        "Allow location or search a city";
+    },
+  );
 });
