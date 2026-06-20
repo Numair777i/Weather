@@ -31,8 +31,15 @@ searchBox.addEventListener("input", () => {
   }, 600);
 });
 
+// window.addEventListener("load", async () => {
+//   const res = await fetch("https://ip-api.com/json/");
+//   const data = await res.json();
+//   checkweather(apiUrl + `lat=${data.lat}&lon=${data.lon}&appid=${apiKey}`);
+// });
+
 window.addEventListener("load", async () => {
   const res = await fetch("https://ip-api.com/json/");
   const data = await res.json();
+  console.log(data);
   checkweather(apiUrl + `lat=${data.lat}&lon=${data.lon}&appid=${apiKey}`);
 });
