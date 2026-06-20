@@ -25,8 +25,9 @@ let debounceTimer;
 searchBox.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    if (searchBox.value.trim()) {
-      checkweather(apiUrl + `q=${searchBox.value.trim()}&appid=${apiKey}`);
+    const cleanCity = searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
+    if (cleanCity) {
+      checkweather(apiUrl + `q=${cleanCity}&appid=${apiKey}`);
     }
   }, 500);
 });
