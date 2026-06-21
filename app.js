@@ -1,7 +1,6 @@
 const apiKey = "4c157f34b0041826b5342b3a93a2f38c";
-const apiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&";
-const forecastUrl =
-  "https://api.openweathermap.org/data/2.5/forecast?units=metric&";
+const apiUrl = "/api/weather?";
+const forecastUrl = "/api/forecast?";
 const searchBox = document.querySelector(".search input");
 const bgAnimation = document.getElementById("bg-animation");
 const tempEl = document.querySelector(".temp");
@@ -33,7 +32,7 @@ function getIcon(condition) {
 // fetch current weather
 async function checkweather(cityQuery) {
   try {
-    const res = await fetch(apiUrl + cityQuery + `&appid=${apiKey}`);
+    const res = await fetch(apiUrl + cityQuery);
     const data = await res.json();
 
     if (data.cod === "404" || data.cod === "400") {
@@ -105,7 +104,7 @@ function clearError() {
 
 // fetch 5 day forecast
 async function fetchForecast(cityQuery) {
-  const res = await fetch(forecastUrl + cityQuery + `&appid=${apiKey}`);
+  const res = await fetch(forecastUrl + cityQuery);
   const data = await res.json();
 
   // pick one reading per day around noon
@@ -249,7 +248,7 @@ function createMist() {
 // on load clear search and show Delhi
 window.addEventListener("load", () => {
   searchBox.value = "";
-  checkweather("q=Delhi");
+  checkweather("city=Delhi");
 });
 
 // debounce search — waits 600ms after user stops typing
@@ -261,7 +260,7 @@ searchBox.addEventListener("input", () => {
     const cleanCity = searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
     if (cleanCity) {
       searchBox.classList.add("loading");
-      checkweather(`q=${cleanCity}`).finally(() => {
+      checkweather(`city=${cleanCity}`).finally(() => {
         searchBox.classList.remove("loading");
       });
     }
