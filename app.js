@@ -114,7 +114,6 @@ function toggleTemp() {
     el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
   });
 
-  // also update hourly strip temps
   document.querySelectorAll(".hour-temp").forEach((el) => {
     const c = parseInt(el.dataset.tempc);
     el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
@@ -125,7 +124,6 @@ function showError(msg) {
   const el = document.querySelector(".error");
   el.innerHTML = msg;
   el.style.display = "block";
-  // also show on floating bar if on mobile
   const fel = document.getElementById("floating-error");
   if (fel) {
     fel.innerHTML = msg;
@@ -147,7 +145,6 @@ async function fetchForecast(cityQuery) {
   const res = await fetch(forecastUrl + cityQuery);
   const data = await res.json();
 
-  // 5-day forecast — pick noon reading per day
   const daily = {};
   data.list.forEach((item) => {
     const date = new Date(item.dt * 1000);
@@ -175,7 +172,6 @@ async function fetchForecast(cityQuery) {
       forecastEl.appendChild(div);
     });
 
-  // hourly strip — next 24 hours (8 slots × 3hr)
   renderHourly(data.list.slice(0, 8));
 }
 
@@ -185,23 +181,18 @@ function renderHourly(slots) {
   const mobileCard = document.getElementById("mobile-hourly-card");
   const mobileStrip = document.getElementById("mobile-hourly-strip");
 
-  // build columns once, clone into both strips
   const cols = buildHourlyCols(slots);
 
-  // desktop strip
   strip.innerHTML = "";
   cols.forEach((col) => strip.appendChild(col.cloneNode(true)));
 
-  // mobile strip
   mobileStrip.innerHTML = "";
   cols.forEach((col) => mobileStrip.appendChild(col.cloneNode(true)));
 
-  // show desktop panel
   if (window.innerWidth > 480) {
     panel.classList.add("open");
   }
 
-  // show mobile card
   if (window.innerWidth <= 480) {
     mobileCard.classList.add("visible");
   }
@@ -210,7 +201,6 @@ function renderHourly(slots) {
 function buildHourlyCols(slots) {
   const cols = [];
 
-  // "Now" column — use live current weather
   const nowCol = document.createElement("div");
   nowCol.classList.add("hour-col");
   const nowCondition = lastWeatherData.weather[0].main;
@@ -221,7 +211,6 @@ function buildHourlyCols(slots) {
   `;
   cols.push(nowCol);
 
-  // next 7 slots from forecast
   slots.slice(1, 8).forEach((item) => {
     const date = new Date(item.dt * 1000);
     const condition = item.weather[0].main;
@@ -356,7 +345,9 @@ function createMist() {
 
 window.addEventListener("load", () => {
   searchBox.value = "";
+  floatingInput.value = "";
   checkweather("city=Delhi");
+
   if (window.innerWidth > 768) {
     searchBox.focus();
   }
