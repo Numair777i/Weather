@@ -44,7 +44,6 @@
 
     <!-- wrapper holds main card + hourly panel together -->
     <div class="card-stack">
-
       <div class="card">
         <div class="search">
           <input type="text" placeholder="Enter city name" spellcheck="false" />
@@ -87,7 +86,17 @@
         </div>
         <div class="hourly-strip" id="hourly-strip"></div>
       </div>
+    </div>
 
+    <!-- floating search bar — mobile only, fixed at bottom -->
+    <div class="floating-search">
+      <input
+        type="text"
+        placeholder="Search city..."
+        spellcheck="false"
+        id="floating-search-input"
+      />
+      <p class="error" id="floating-error"></p>
     </div>
 
     <script src="app.js"></script>

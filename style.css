@@ -577,6 +577,11 @@ body.mist {
   }
 }
 
+/* floating search bar — mobile only, fixed at bottom */
+.floating-search {
+  display: none;
+}
+
 @media (max-width: 480px) {
   body {
     align-items: flex-end;
@@ -584,6 +589,71 @@ body.mist {
     justify-content: flex-end;
     padding: 0;
     min-height: 100vh;
+  }
+
+  /* floating search pill fixed at bottom */
+  .floating-search {
+    display: block;
+    position: fixed;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 420px;
+    z-index: 999;
+  }
+
+  .floating-search input {
+    width: 100%;
+    height: 52px;
+    border: 0;
+    outline: 0;
+    border-radius: 30px;
+    padding: 0 24px;
+    font-size: 16px;
+    color: #fff;
+    /* apple liquid glass */
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+    -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
+    border-left: 1px solid rgba(255, 255, 255, 0.35);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.25),
+      0 2px 8px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+  .floating-search input::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .floating-search input.loading {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    animation: inputpulse 1s ease-in-out infinite;
+  }
+  .floating-search input.success {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    animation: successpulse 0.6s ease-out forwards;
+  }
+  .floating-search .error {
+    display: none;
+    color: rgba(255, 100, 100, 0.95);
+    font-size: 13px;
+    margin-top: 6px;
+    margin-left: 12px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* hide the search bar inside the card on mobile */
+  .card .search {
+    display: none;
+  }
+
+  /* add bottom padding to card so content isn't hidden behind floating bar */
+  .card {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
 
   .mobile-today {
@@ -645,7 +715,7 @@ body.mist {
     width: 100%;
   }
 
-  /* mobile hourly card — same glass as main card, sits below tip with a gap */
+  /* mobile hourly card */
   .mobile-hourly-card {
     display: none;
     width: 100%;
@@ -671,7 +741,6 @@ body.mist {
   .mobile-hourly-card.visible {
     display: block;
   }
-  /* on mobile the strip scrolls left-right */
   .mobile-hourly-card .hourly-strip {
     display: flex;
     overflow-x: auto;
@@ -683,7 +752,6 @@ body.mist {
   .mobile-hourly-card .hourly-strip::-webkit-scrollbar {
     display: none;
   }
-  /* fixed width columns so they don't stretch — scroll instead */
   .mobile-hourly-card .hour-col {
     flex: 0 0 72px;
     min-width: 72px;
@@ -693,7 +761,7 @@ body.mist {
     margin-bottom: 12px;
   }
 
-  /* gap between hourly card and main forecast card below */
+  /* gap between hourly card and forecast card */
   .card-stack {
     width: 100%;
     margin: 0;
@@ -702,6 +770,7 @@ body.mist {
   .card {
     border-radius: 30px 30px 0 0;
     padding: 20px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
   .today {
     display: none;
@@ -726,13 +795,6 @@ body.mist {
   .forecast-day .day-condition {
     width: 70px;
     font-size: 12px;
-  }
-  .search {
-    margin-bottom: 15px;
-  }
-  .search input {
-    font-size: 14px;
-    height: 45px;
   }
 
   /* hide desktop hourly panel on mobile */

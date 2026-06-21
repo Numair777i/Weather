@@ -125,11 +125,22 @@ function showError(msg) {
   const el = document.querySelector(".error");
   el.innerHTML = msg;
   el.style.display = "block";
+  // also show on floating bar if on mobile
+  const fel = document.getElementById("floating-error");
+  if (fel) {
+    fel.innerHTML = msg;
+    fel.style.display = "block";
+  }
 }
 function clearError() {
   const el = document.querySelector(".error");
   el.innerHTML = "";
   el.style.display = "none";
+  const fel = document.getElementById("floating-error");
+  if (fel) {
+    fel.innerHTML = "";
+    fel.style.display = "none";
+  }
 }
 
 async function fetchForecast(cityQuery) {
@@ -361,6 +372,24 @@ searchBox.addEventListener("input", () => {
       searchBox.classList.add("loading");
       checkweather(`city=${cleanCity}`).finally(() => {
         searchBox.classList.remove("loading");
+      });
+    }
+  }, 400);
+});
+
+// floating search — mobile only, mirrors the main search box
+const floatingInput = document.getElementById("floating-search-input");
+const floatingError = document.getElementById("floating-error");
+
+floatingInput.addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  floatingInput.classList.remove("loading");
+  debounceTimer = setTimeout(() => {
+    const cleanCity = floatingInput.value.replace(/[^a-zA-Z\s]/g, "").trim();
+    if (cleanCity) {
+      floatingInput.classList.add("loading");
+      checkweather(`city=${cleanCity}`).finally(() => {
+        floatingInput.classList.remove("loading");
       });
     }
   }, 400);
