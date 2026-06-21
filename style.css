@@ -36,7 +36,7 @@ body.rain {
   background: linear-gradient(to bottom, #373b44, #4286f4);
 }
 body.drizzle {
-  background: linear-gradient(to bottom, #89f7fe, #66a6ff);
+  background: linear-gradient(to bottom, #4a6fa5, #7fb3d3);
 }
 body.thunderstorm {
   background: linear-gradient(to bottom, #0f0c29, #302b63);

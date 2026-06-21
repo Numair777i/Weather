@@ -256,15 +256,20 @@ function createSnow(count) {
 }
 
 function createLightning() {
-  for (let i = 0; i < 3; i++) {
-    const bolt = document.createElement("div");
-    bolt.classList.add("lightning");
-    bolt.style.left = Math.random() * 100 + "vw";
-    bolt.style.top = "0";
-    bolt.style.height = Math.random() * 200 + 100 + "px";
-    bolt.style.animationDuration = Math.random() * 4 + 3 + "s";
-    bolt.style.animationDelay = Math.random() * 3 + "s";
-    bgAnimation.appendChild(bolt);
+  // flash the whole background instead of visible lines
+  for (let i = 0; i < 4; i++) {
+    const flash = document.createElement("div");
+    flash.style.cssText = `
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(100, 150, 255, 0.08);
+      animation: flash ${Math.random() * 4 + 3}s ease-in-out infinite;
+      animation-delay: ${Math.random() * 5}s;
+      pointer-events: none;
+      z-index: 0;
+    `;
+    bgAnimation.appendChild(flash);
   }
 }
 
