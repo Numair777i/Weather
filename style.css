@@ -490,6 +490,12 @@ body.clear .search input::placeholder {
 .wind {
   font-size: 20px;
 }
+.humidity-feel,
+.wind-feel {
+  font-size: 12px;
+  opacity: 0.55;
+  margin-top: 1px;
+}
 .tip {
   margin-top: 15px;
   font-size: 15px;
@@ -519,6 +525,37 @@ body.clear .search input::placeholder {
 /* CHANGED: warm-white tint on forecast tiles for clear sky */
 body.clear .forecast-day {
   background: rgba(255, 252, 245, 0.1);
+}
+
+/* CHANGED: darken icons on clear sky so they pop against the light bg */
+body.clear .hour-col .bx-sun,
+body.clear .forecast-day .bx-sun {
+  color: #c97b00;
+}
+body.clear .hour-col .bx-cloud,
+body.clear .forecast-day .bx-cloud {
+  color: rgba(255, 255, 255, 0.75);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+body.clear .hour-col .bx-cloud-rain,
+body.clear .forecast-day .bx-cloud-rain {
+  color: #2d7fc1;
+}
+body.clear .hour-col .bx-cloud-drizzle,
+body.clear .forecast-day .bx-cloud-drizzle {
+  color: #3a7abf;
+}
+body.clear .hour-col .bx-cloud-lightning,
+body.clear .forecast-day .bx-cloud-lightning {
+  color: #c9a800;
+}
+body.clear .hour-col .bx-snow,
+body.clear .forecast-day .bx-snow {
+  color: #8ab8cc;
+}
+body.clear .hour-col .bx-water,
+body.clear .forecast-day .bx-water {
+  color: #5a87a8;
 }
 
 .forecast-day .day-name {
