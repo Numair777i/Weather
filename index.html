@@ -34,41 +34,52 @@
       <p class="m-tip"></p>
     </div>
 
-    <div class="card">
-      <div class="search">
-        <input type="text" placeholder="Enter city name" spellcheck="false" />
-        <p class="error"></p>
-      </div>
-      <div class="main">
-        <!-- desktop: today's weather on left -->
-        <div class="today">
-          <h2 class="city"></h2>
-          <h1 class="temp"></h1>
-          <p class="feels"></p>
-          <p class="condition"></p>
-          <div class="details">
-            <div class="col">
-              <i class="bx bx-air"></i>
-              <div>
-                <p class="humidity"></p>
-                <p>Humidity</p>
-              </div>
-            </div>
-            <div class="col">
-              <i class="bx bx-wind"></i>
-              <div>
-                <p class="wind"></p>
-                <p>Wind</p>
-              </div>
-            </div>
-          </div>
-          <p class="tip"></p>
+    <!-- wrapper holds main card + hourly panel together -->
+    <div class="card-stack">
+      <div class="card">
+        <div class="search">
+          <input type="text" placeholder="Enter city name" spellcheck="false" />
+          <p class="error"></p>
         </div>
+        <div class="main">
+          <!-- desktop: today's weather on left -->
+          <div class="today">
+            <h2 class="city"></h2>
+            <h1 class="temp"></h1>
+            <p class="feels"></p>
+            <p class="condition"></p>
+            <div class="details">
+              <div class="col">
+                <i class="bx bx-air"></i>
+                <div>
+                  <p class="humidity"></p>
+                  <p>Humidity</p>
+                </div>
+              </div>
+              <div class="col">
+                <i class="bx bx-wind"></i>
+                <div>
+                  <p class="wind"></p>
+                  <p>Wind</p>
+                </div>
+              </div>
+            </div>
+            <p class="tip"></p>
+          </div>
+          <!-- right: 5 day forecast -->
+          <div class="forecast" id="forecast"></div>
+        </div>
+      </div>
 
-        <!-- right: 5 day forecast -->
-        <div class="forecast" id="forecast"></div>
+      <!-- hourly panel: slides out below like a keyboard phone -->
+      <div class="hourly-panel" id="hourly-panel">
+        <div class="hourly-label">
+          <i class="bx bx-time-five"></i> Next 24 hours
+        </div>
+        <div class="hourly-strip" id="hourly-strip"></div>
       </div>
     </div>
+
     <script src="app.js"></script>
   </body>
 </html>

@@ -4,15 +4,12 @@ const searchBox = document.querySelector(".search input");
 const bgAnimation = document.getElementById("bg-animation");
 const tempEl = document.querySelector(".temp");
 
-// tracks current temp and unit globally
 let currentTempC = 0;
 let lastWeatherData = null;
 let isCelsius = true;
 
-// click big temp to toggle C/F
 tempEl.onclick = toggleTemp;
 
-// map OWM condition to boxicon class
 function getIcon(condition) {
   const icons = {
     Clear: "bx bx-sun",
@@ -29,7 +26,19 @@ function getIcon(condition) {
   return icons[condition] || "bx bx-cloud";
 }
 
-// fetch and display current weather
+function getTip(condition, temp, humidity, wind) {
+  if (["Rain", "Drizzle", "Thunderstorm"].includes(condition))
+    return "🌂 Carry an umbrella today";
+  if (condition === "Snow") return "🧤 Bundle up, it's snowing";
+  if (temp >= 40) return "🥵 Scorching heat, stay hydrated";
+  if (temp >= 30) return "☀️ Hot outside, wear a hat and sunscreen";
+  if (temp <= 5) return "🧥 Freezing cold, wear a heavy jacket";
+  if (temp <= 15) return "🧣 Chilly outside, carry a jacket";
+  if (humidity >= 80) return "💧 Very humid, feels hotter than it looks";
+  if (wind >= 20) return "💨 Strong winds, hold onto your hat";
+  return "😊 Pleasant weather, enjoy your day";
+}
+
 async function checkweather(cityQuery) {
   try {
     const res = await fetch(apiUrl + cityQuery);
@@ -43,11 +52,9 @@ async function checkweather(cityQuery) {
     clearError();
     lastWeatherData = data;
 
-    // flash white glow on search bar — confirms something happened
     searchBox.classList.add("success");
     setTimeout(() => searchBox.classList.remove("success"), 600);
 
-    // store temp globally so toggle works anytime
     currentTempC = Math.round(data.main.temp);
     isCelsius = true;
 
@@ -56,11 +63,8 @@ async function checkweather(cityQuery) {
     const humidity = data.main.humidity;
     const wind = data.wind.speed;
     const feelsLike = Math.round(data.main.feels_like);
-
-    // pick smart tip based on weather data
     const tip = getTip(condition, temp, humidity, wind);
 
-    // update desktop view
     document.querySelector(".city").innerHTML = data.name;
     tempEl.innerHTML = currentTempC + `<span class="unit">°c</span>`;
     document.querySelector(".feels").innerHTML =
@@ -70,7 +74,6 @@ async function checkweather(cityQuery) {
     document.querySelector(".wind").innerHTML = wind + " km/h";
     document.querySelector(".tip").innerHTML = tip;
 
-    // update mobile view if on small screen
     if (window.innerWidth <= 480) {
       const mobileToday = document.querySelector(".mobile-today");
       mobileToday.style.display = "flex";
@@ -95,21 +98,6 @@ async function checkweather(cityQuery) {
   }
 }
 
-// reusable tip logic
-function getTip(condition, temp, humidity, wind) {
-  if (["Rain", "Drizzle", "Thunderstorm"].includes(condition))
-    return "🌂 Carry an umbrella today";
-  if (condition === "Snow") return "🧤 Bundle up, it's snowing";
-  if (temp >= 40) return "🥵 Scorching heat, stay hydrated";
-  if (temp >= 30) return "☀️ Hot outside, wear a hat and sunscreen";
-  if (temp <= 5) return "🧥 Freezing cold, wear a heavy jacket";
-  if (temp <= 15) return "🧣 Chilly outside, carry a jacket";
-  if (humidity >= 80) return "💧 Very humid, feels hotter than it looks";
-  if (wind >= 20) return "💨 Strong winds, hold onto your hat";
-  return "😊 Pleasant weather, enjoy your day";
-}
-
-// single toggle function handles both desktop and mobile
 function toggleTemp() {
   isCelsius = !isCelsius;
   const display = (c) =>
@@ -117,19 +105,22 @@ function toggleTemp() {
       ? c + `<span class="unit">°c</span>`
       : Math.round((c * 9) / 5 + 32) + `<span class="unit">°f</span>`;
 
-  // update both desktop and mobile temp
   tempEl.innerHTML = display(currentTempC);
   const mTemp = document.querySelector(".m-temp");
   if (mTemp) mTemp.innerHTML = display(currentTempC);
 
-  // update all forecast day temps
   document.querySelectorAll(".day-temp").forEach((el) => {
+    const c = parseInt(el.dataset.tempc);
+    el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
+  });
+
+  // also update hourly strip temps
+  document.querySelectorAll(".hour-temp").forEach((el) => {
     const c = parseInt(el.dataset.tempc);
     el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
   });
 }
 
-// show/hide error below search bar
 function showError(msg) {
   const el = document.querySelector(".error");
   el.innerHTML = msg;
@@ -141,12 +132,11 @@ function clearError() {
   el.style.display = "none";
 }
 
-// fetch 5 day forecast and render
 async function fetchForecast(cityQuery) {
   const res = await fetch(forecastUrl + cityQuery);
   const data = await res.json();
 
-  // OWM sends every 3hrs — pick the reading closest to noon each day
+  // 5-day forecast — pick noon reading per day
   const daily = {};
   data.list.forEach((item) => {
     const date = new Date(item.dt * 1000);
@@ -166,16 +156,58 @@ async function fetchForecast(cityQuery) {
       const div = document.createElement("div");
       div.classList.add("forecast-day");
       div.innerHTML = `
-      <span class="day-name">${day}</span>
-      <i class="${getIcon(condition)}"></i>
-      <span class="day-temp" data-tempc="${temp}">${temp}°c</span>
-      <span class="day-condition">${condition}</span>
-    `;
+        <span class="day-name">${day}</span>
+        <i class="${getIcon(condition)}"></i>
+        <span class="day-temp" data-tempc="${temp}">${temp}°c</span>
+        <span class="day-condition">${condition}</span>
+      `;
       forecastEl.appendChild(div);
     });
+
+  // hourly strip — next 24 hours (8 slots × 3hr)
+  renderHourly(data.list.slice(0, 8));
 }
 
-// change bg + animations based on weather condition
+function renderHourly(slots) {
+  // only show on non-mobile
+  if (window.innerWidth <= 480) return;
+
+  const panel = document.getElementById("hourly-panel");
+  const strip = document.getElementById("hourly-strip");
+  strip.innerHTML = "";
+
+  const now = new Date();
+
+  slots.forEach((item, i) => {
+    const date = new Date(item.dt * 1000);
+    const condition = item.weather[0].main;
+    const temp = Math.round(item.main.temp);
+
+    // label: "Now" for first slot, otherwise time like "3 PM"
+    let label;
+    if (i === 0) {
+      label = "Now";
+    } else {
+      label = date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        hour12: true,
+      });
+    }
+
+    const col = document.createElement("div");
+    col.classList.add("hour-col");
+    col.innerHTML = `
+      <span class="hour-label">${label}</span>
+      <i class="${getIcon(condition)}"></i>
+      <span class="hour-temp" data-tempc="${temp}">${isCelsius ? temp + "°c" : Math.round((temp * 9) / 5 + 32) + "°f"}</span>
+    `;
+    strip.appendChild(col);
+  });
+
+  // slide it open
+  panel.classList.add("open");
+}
+
 function setBackground(condition) {
   document.body.className = "";
   bgAnimation.innerHTML = "";
@@ -287,7 +319,6 @@ function createMist() {
   }
 }
 
-// on page load: clear search and load Delhi by default
 window.addEventListener("load", () => {
   searchBox.value = "";
   checkweather("city=Delhi");
@@ -296,7 +327,6 @@ window.addEventListener("load", () => {
   }
 });
 
-// debounce: waits 400ms after user stops typing before searching
 let debounceTimer;
 searchBox.addEventListener("input", () => {
   clearTimeout(debounceTimer);
@@ -312,7 +342,6 @@ searchBox.addEventListener("input", () => {
   }, 400);
 });
 
-// sync all mobile UI elements from cached data
 function syncMobileView() {
   if (!lastWeatherData) return;
 
@@ -347,15 +376,17 @@ function syncMobileView() {
     document.querySelector(".m-wind").innerHTML =
       `<i class="bx bx-wind"></i> ${wind} km/h Wind`;
     document.querySelector(".m-tip").innerHTML = tip;
+
+    // hide hourly panel on mobile
+    const panel = document.getElementById("hourly-panel");
+    if (panel) panel.classList.remove("open");
   } else {
     mobileToday.style.display = "none";
   }
 }
 
-// re-sync on resize (handles desktop mode toggle)
 window.addEventListener("resize", syncMobileView);
 
-// re-sync on orientation change — Android fires this before resize
 window.addEventListener("orientationchange", () => {
   setTimeout(syncMobileView, 150);
 });
