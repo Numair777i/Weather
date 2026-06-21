@@ -453,3 +453,10 @@ window.addEventListener("resize", () => {
 window.addEventListener("orientationchange", () => {
   setTimeout(syncMobileView, 150);
 });
+
+// register service worker for PWA
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js");
+  });
+}
