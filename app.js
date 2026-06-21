@@ -89,8 +89,10 @@ async function checkweather(cityQuery) {
       document.querySelector(".m-feels").innerHTML =
         "Feels like " + feelsLike + "°c";
       document.querySelector(".m-condition").innerHTML = condition;
-      document.querySelector(".m-humidity").innerHTML = "💧 " + humidity + "%";
-      document.querySelector(".m-wind").innerHTML = "💨 " + wind + " km/h";
+      document.querySelector(".m-humidity").innerHTML =
+        `<i class="bx bx-air"></i> ${humidity}% Humidity`;
+      document.querySelector(".m-wind").innerHTML =
+        `<i class="bx bx-wind"></i> ${wind} km/h Wind`;
       document.querySelector(".m-tip").innerHTML = tip;
     }
 
@@ -280,6 +282,10 @@ function createMist() {
 window.addEventListener("load", () => {
   searchBox.value = "";
   checkweather("city=Delhi");
+  // auto focus search on desktop only — avoids keyboard popup on mobile
+  if (window.innerWidth > 768) {
+    searchBox.focus();
+  }
 });
 
 // debounce: waits 600ms after user stops typing before searching
@@ -303,7 +309,13 @@ searchBox.addEventListener("input", () => {
 window.addEventListener("resize", () => {
   const mobileToday = document.querySelector(".mobile-today");
   if (window.innerWidth <= 480) {
-    mobileToday.style.display = "flex";
+    // if data exists, repopulate mobile view
+    if (currentTempC !== 0) {
+      mobileToday.style.display = "flex";
+      const mTemp = document.querySelector(".m-temp");
+      mTemp.innerHTML = currentTempC + `<span class="unit">°c</span>`;
+      mTemp.onclick = toggleTemp;
+    }
   } else {
     mobileToday.style.display = "none";
   }

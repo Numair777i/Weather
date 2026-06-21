@@ -506,7 +506,15 @@ body.mist {
     margin-top: 12px;
     opacity: 0.8;
     font-size: 14px;
+    align-items: center;
   }
+
+  .mobile-today .m-details i {
+    font-size: 20px;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
   .mobile-today .m-tip {
     margin-top: 12px;
     font-size: 13px;
