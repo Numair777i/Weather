@@ -97,6 +97,7 @@ async function checkweather(cityQuery) {
 
     clearError();
     lastWeatherData = data;
+    fetchAirQuality(data.coord.lat, data.coord.lon);
 
     dom.searchBox.classList.add("success");
     setTimeout(() => dom.searchBox.classList.remove("success"), 600);
@@ -468,3 +469,25 @@ window.addEventListener("resize", () => {
 window.addEventListener("orientationchange", () => {
   setTimeout(syncMobileView, 150);
 });
+
+// fetch air quality using coordinates from weather data
+async function fetchAirQuality(lat, lon) {
+  const res = await fetch(`/api/airquality?lat=${lat}&lon=${lon}`);
+  const data = await res.json();
+  const aqi = data.list[0].main.aqi;
+
+  // OWM AQI: 1=Good 2=Fair 3=Moderate 4=Poor 5=Very Poor
+  const labels = {
+    1: "Good",
+    2: "Fair",
+    3: "Moderate",
+    4: "Poor",
+    5: "Very Poor",
+  };
+  const label = labels[aqi];
+
+  document.querySelector(".aqi-number").innerHTML = aqi + " AQI";
+  document.querySelector(".aqi-label").innerHTML = label;
+  document.querySelector(".m-aqi-number").innerHTML = aqi + " AQI";
+  document.querySelector(".m-aqi-label").innerHTML = label;
+}

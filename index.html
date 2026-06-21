@@ -31,9 +31,13 @@
         <span class="m-humidity"></span>
         <span class="m-wind"></span>
       </div>
+      <!-- air quality — mobile -->
+      <div class="m-aqi">
+        <p class="m-aqi-number"></p>
+        <p class="m-aqi-label"></p>
+      </div>
       <p class="m-tip"></p>
-
-      <!-- mobile hourly card: sits between weather info and forecast -->
+      <!-- hourly card sits between weather info and forecast card -->
       <div class="mobile-hourly-card" id="mobile-hourly-card">
         <div class="hourly-label">
           <i class="bx bx-time-five"></i> Next 24 hours
@@ -56,6 +60,11 @@
             <h1 class="temp"></h1>
             <p class="feels"></p>
             <p class="condition"></p>
+            <!-- air quality — desktop -->
+            <div class="aqi">
+              <p class="aqi-number"></p>
+              <p class="aqi-label"></p>
+            </div>
             <div class="details">
               <div class="col">
                 <i class="bx bx-air"></i>
@@ -76,12 +85,13 @@
             </div>
             <p class="tip"></p>
           </div>
+
           <!-- right: 5 day forecast -->
           <div class="forecast" id="forecast"></div>
         </div>
       </div>
 
-      <!-- hourly panel: slides out below like a keyboard phone -->
+      <!-- hourly panel: slides out below on desktop -->
       <div class="hourly-panel" id="hourly-panel">
         <div class="hourly-label">
           <i class="bx bx-time-five"></i> Next 24 hours
