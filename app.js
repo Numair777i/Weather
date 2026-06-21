@@ -58,17 +58,7 @@ async function checkweather(cityQuery) {
     const feelsLike = Math.round(data.main.feels_like);
 
     // pick smart tip based on weather data
-    let tip = "";
-    if (["Rain", "Drizzle", "Thunderstorm"].includes(condition))
-      tip = "🌂 Carry an umbrella today";
-    else if (condition === "Snow") tip = "🧤 Bundle up, it's snowing";
-    else if (temp >= 40) tip = "🥵 Scorching heat, stay hydrated";
-    else if (temp >= 30) tip = "☀️ Hot outside, wear a hat and sunscreen";
-    else if (temp <= 5) tip = "🧥 Freezing cold, wear a heavy jacket";
-    else if (temp <= 15) tip = "🧣 Chilly outside, carry a jacket";
-    else if (humidity >= 80) tip = "💧 Very humid, feels hotter than it looks";
-    else if (wind >= 20) tip = "💨 Strong winds, hold onto your hat";
-    else tip = "😊 Pleasant weather, enjoy your day";
+    const tip = getTip(condition, temp, humidity, wind);
 
     // update desktop view
     document.querySelector(".city").innerHTML = data.name;
@@ -86,7 +76,7 @@ async function checkweather(cityQuery) {
       mobileToday.style.display = "flex";
       const mTemp = document.querySelector(".m-temp");
       mTemp.innerHTML = currentTempC + `<span class="unit">°c</span>`;
-      mTemp.onclick = toggleTemp; // same toggle function, no duplicate
+      mTemp.onclick = toggleTemp;
       document.querySelector(".m-city").innerHTML = data.name;
       document.querySelector(".m-feels").innerHTML =
         "Feels like " + feelsLike + "°c";
@@ -103,6 +93,20 @@ async function checkweather(cityQuery) {
   } catch (err) {
     showError("Something went wrong. Try again.");
   }
+}
+
+// reusable tip logic
+function getTip(condition, temp, humidity, wind) {
+  if (["Rain", "Drizzle", "Thunderstorm"].includes(condition))
+    return "🌂 Carry an umbrella today";
+  if (condition === "Snow") return "🧤 Bundle up, it's snowing";
+  if (temp >= 40) return "🥵 Scorching heat, stay hydrated";
+  if (temp >= 30) return "☀️ Hot outside, wear a hat and sunscreen";
+  if (temp <= 5) return "🧥 Freezing cold, wear a heavy jacket";
+  if (temp <= 15) return "🧣 Chilly outside, carry a jacket";
+  if (humidity >= 80) return "💧 Very humid, feels hotter than it looks";
+  if (wind >= 20) return "💨 Strong winds, hold onto your hat";
+  return "😊 Pleasant weather, enjoy your day";
 }
 
 // single toggle function handles both desktop and mobile
@@ -217,7 +221,6 @@ function createClouds(count) {
     cloud.style.opacity = Math.random() * 0.4 + 0.4;
     cloud.style.transform = `scale(${Math.random() * 0.8 + 0.6})`;
 
-    // 3 circular bumps on top to look like a real cloud
     [
       { width: "80px", height: "80px", top: "-40px", left: "20px" },
       { width: "100px", height: "100px", top: "-55px", left: "60px" },
@@ -256,7 +259,6 @@ function createSnow(count) {
 }
 
 function createLightning() {
-  // flash the whole background instead of visible lines
   for (let i = 0; i < 4; i++) {
     const flash = document.createElement("div");
     flash.style.cssText = `
@@ -289,19 +291,17 @@ function createMist() {
 window.addEventListener("load", () => {
   searchBox.value = "";
   checkweather("city=Delhi");
-  // auto focus search on desktop only — avoids keyboard popup on mobile
   if (window.innerWidth > 768) {
     searchBox.focus();
   }
 });
 
-// debounce: waits 600ms after user stops typing before searching
+// debounce: waits 400ms after user stops typing before searching
 let debounceTimer;
 searchBox.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   searchBox.classList.remove("loading");
   debounceTimer = setTimeout(() => {
-    // strip symbols, keep only letters and spaces
     const cleanCity = searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
     if (cleanCity) {
       searchBox.classList.add("loading");
@@ -312,24 +312,50 @@ searchBox.addEventListener("input", () => {
   }, 400);
 });
 
-// re-show mobile view when rotating back to portrait
-window.addEventListener("resize", () => {
+// sync all mobile UI elements from cached data
+function syncMobileView() {
+  if (!lastWeatherData) return;
+
   const mobileToday = document.querySelector(".mobile-today");
-  if (window.innerWidth <= 480 && lastWeatherData) {
+  const isMobile = window.innerWidth <= 480;
+
+  if (isMobile) {
     mobileToday.style.display = "flex";
+
+    const condition = lastWeatherData.weather[0].main;
+    const temp = lastWeatherData.main.temp;
+    const humidity = lastWeatherData.main.humidity;
+    const wind = lastWeatherData.wind.speed;
+    const feelsLike = Math.round(lastWeatherData.main.feels_like);
+    const tip = getTip(condition, temp, humidity, wind);
+
+    const unitLabel = isCelsius ? "°c" : "°f";
+    const displayTemp = isCelsius
+      ? currentTempC
+      : Math.round((currentTempC * 9) / 5 + 32);
+
+    const mTemp = document.querySelector(".m-temp");
+    mTemp.innerHTML = displayTemp + `<span class="unit">${unitLabel}</span>`;
+    mTemp.onclick = toggleTemp;
+
     document.querySelector(".m-city").innerHTML = lastWeatherData.name;
-    document.querySelector(".m-temp").innerHTML =
-      currentTempC + `<span class="unit">°c</span>`;
-    document.querySelector(".m-temp").onclick = toggleTemp;
     document.querySelector(".m-feels").innerHTML =
-      "Feels like " + Math.round(lastWeatherData.main.feels_like) + "°c";
-    document.querySelector(".m-condition").innerHTML =
-      lastWeatherData.weather[0].main;
+      "Feels like " + feelsLike + unitLabel;
+    document.querySelector(".m-condition").innerHTML = condition;
     document.querySelector(".m-humidity").innerHTML =
-      `<i class="bx bx-air"></i> ${lastWeatherData.main.humidity}% Humidity`;
+      `<i class="bx bx-air"></i> ${humidity}% Humidity`;
     document.querySelector(".m-wind").innerHTML =
-      `<i class="bx bx-wind"></i> ${lastWeatherData.wind.speed} km/h Wind`;
-  } else if (window.innerWidth > 480) {
+      `<i class="bx bx-wind"></i> ${wind} km/h Wind`;
+    document.querySelector(".m-tip").innerHTML = tip;
+  } else {
     mobileToday.style.display = "none";
   }
+}
+
+// re-sync on resize (handles desktop mode toggle)
+window.addEventListener("resize", syncMobileView);
+
+// re-sync on orientation change — Android fires this before resize
+window.addEventListener("orientationchange", () => {
+  setTimeout(syncMobileView, 150);
 });
