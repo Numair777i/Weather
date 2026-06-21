@@ -31,11 +31,6 @@
         <span class="m-humidity"></span>
         <span class="m-wind"></span>
       </div>
-      <!-- air quality — mobile -->
-      <div class="m-aqi">
-        <p class="m-aqi-number"></p>
-        <p class="m-aqi-label"></p>
-      </div>
       <p class="m-tip"></p>
       <!-- hourly card sits between weather info and forecast card -->
       <div class="mobile-hourly-card" id="mobile-hourly-card">
@@ -46,7 +41,7 @@
       </div>
     </div>
 
-    <!-- wrapper holds main card + hourly panel together -->
+    <!-- main card + hourly panel -->
     <div class="card-stack">
       <div class="card">
         <div class="search">
@@ -54,17 +49,12 @@
           <p class="error"></p>
         </div>
         <div class="main">
-          <!-- desktop: today's weather on left -->
+          <!-- left: today -->
           <div class="today">
             <h2 class="city"></h2>
             <h1 class="temp"></h1>
             <p class="feels"></p>
             <p class="condition"></p>
-            <!-- air quality — desktop -->
-            <div class="aqi">
-              <p class="aqi-number"></p>
-              <p class="aqi-label"></p>
-            </div>
             <div class="details">
               <div class="col">
                 <i class="bx bx-air"></i>
@@ -85,13 +75,11 @@
             </div>
             <p class="tip"></p>
           </div>
-
           <!-- right: 5 day forecast -->
           <div class="forecast" id="forecast"></div>
         </div>
       </div>
-
-      <!-- hourly panel: slides out below on desktop -->
+      <!-- hourly panel slides below on desktop -->
       <div class="hourly-panel" id="hourly-panel">
         <div class="hourly-label">
           <i class="bx bx-time-five"></i> Next 24 hours
@@ -100,7 +88,7 @@
       </div>
     </div>
 
-    <!-- floating search bar — mobile only, fixed at bottom -->
+    <!-- floating search — mobile only, fixed at bottom -->
     <div class="floating-search">
       <input
         type="text"

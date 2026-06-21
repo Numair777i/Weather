@@ -23,7 +23,7 @@ body {
   transition: background 1s ease;
 }
 
-/* CHANGED: warm, muted clear sky — soft steel-blue top fading to pale haze */
+/* weather backgrounds */
 body.clear {
   background: linear-gradient(to bottom, #5b7fa6, #a8c4d8);
 }
@@ -31,7 +31,7 @@ body.clouds {
   background: linear-gradient(to bottom, #bdc3c7, #2c3e50);
 }
 body.rain {
-  background: linear-gradient(to bottom, #373b44, #4286f4);
+  background: linear-gradient(to bottom, #2c3e6b, #4a6fa5);
 }
 body.drizzle {
   background: linear-gradient(to bottom, #4a6fa5, #7fb3d3);
@@ -46,6 +46,7 @@ body.mist {
   background: linear-gradient(to bottom, #8e9eab, #b0bec5);
 }
 
+/* fixed animated bg layer */
 #bg-animation {
   position: fixed;
   top: 0;
@@ -58,6 +59,7 @@ body.mist {
   contain: strict;
 }
 
+/* particles */
 .particle {
   position: absolute;
   top: -20px;
@@ -85,6 +87,7 @@ body.mist {
   opacity: 0.8;
   animation-name: snowfall;
 }
+
 .cloud {
   width: 220px;
   height: 60px;
@@ -107,14 +110,6 @@ body.mist {
   box-shadow: 0 0 60px rgba(255, 255, 255, 0.4);
   animation: pulse 3s ease-in-out infinite;
 }
-.lightning {
-  position: absolute;
-  width: 3px;
-  background: rgba(255, 255, 230, 0.9);
-  animation-name: flash;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
 .mistlayer {
   position: absolute;
   width: 100%;
@@ -126,6 +121,7 @@ body.mist {
   animation-iteration-count: infinite;
 }
 
+/* animations */
 @keyframes fall {
   0% {
     top: -20px;
@@ -203,17 +199,7 @@ body.mist {
   }
 }
 
-/* ---- card stack: main card + hourly panel sit together ---- */
-.card-stack {
-  position: relative;
-  z-index: 1;
-  width: 90%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding-bottom: 0;
-}
-
-/* shared glass style — both cards use this */
+/* shared glass style */
 .card,
 .hourly-panel {
   background: linear-gradient(
@@ -234,7 +220,7 @@ body.mist {
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* CHANGED: nearly transparent warm-white glass on clear — kills the vivid blue tint */
+/* warm glass on clear sky */
 body.clear .card,
 body.clear .hourly-panel,
 body.clear .mobile-hourly-card {
@@ -250,13 +236,31 @@ body.clear .mobile-hourly-card {
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
+/* slightly lighter glass on rain — stops the dark blue bleed */
+body.rain .card,
+body.rain .hourly-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.card-stack {
+  position: relative;
+  z-index: 1;
+  width: 90%;
+  max-width: 900px;
+  margin: 0 auto;
+}
 .card {
   padding: 30px 35px;
   position: relative;
   z-index: 2;
 }
 
-/* ---- hourly panel: keyboard-phone slide effect ---- */
+/* hourly panel slides below card */
 .hourly-panel {
   max-height: 0;
   overflow: hidden;
@@ -273,7 +277,6 @@ body.clear .mobile-hourly-card {
   z-index: 1;
   position: relative;
 }
-
 .hourly-panel.open {
   max-height: 160px;
   opacity: 1;
@@ -323,70 +326,85 @@ body.clear .mobile-hourly-card {
 .hour-col:last-child {
   border-right: none;
 }
-
 .hour-label {
   font-size: 13px;
   opacity: 0.7;
   white-space: nowrap;
 }
-
-.hour-col .bx-sun {
-  color: #f9c74f;
-  font-size: 24px;
-}
-.hour-col .bx-cloud {
-  color: #e0e0e0;
-  font-size: 24px;
-}
-.hour-col .bx-cloud-rain {
-  color: #74b9ff;
-  font-size: 24px;
-}
-.hour-col .bx-cloud-drizzle {
-  color: #a0c4ff;
-  font-size: 24px;
-}
-.hour-col .bx-cloud-lightning {
-  color: #f4d03f;
-  font-size: 24px;
-}
-.hour-col .bx-snow {
-  color: #caf0f8;
-  font-size: 24px;
-}
-.hour-col .bx-water {
-  color: #b0c4de;
-  font-size: 24px;
-}
-
-.forecast-day .bx-sun {
-  color: #f9c74f;
-}
-.forecast-day .bx-cloud {
-  color: #e0e0e0;
-}
-.forecast-day .bx-cloud-rain {
-  color: #74b9ff;
-}
-.forecast-day .bx-cloud-drizzle {
-  color: #a0c4ff;
-}
-.forecast-day .bx-cloud-lightning {
-  color: #f4d03f;
-}
-.forecast-day .bx-snow {
-  color: #caf0f8;
-}
-.forecast-day .bx-water {
-  color: #b0c4de;
-}
-
 .hour-temp {
   font-size: 15px;
   font-weight: 500;
 }
 
-/* ---- search bar ---- */
+/* icon colors */
+.hour-col .bx-sun,
+.forecast-day .bx-sun {
+  color: #f9c74f;
+  font-size: 24px;
+}
+.hour-col .bx-cloud,
+.forecast-day .bx-cloud {
+  color: #e0e0e0;
+  font-size: 24px;
+}
+.hour-col .bx-cloud-rain,
+.forecast-day .bx-cloud-rain {
+  color: #74b9ff;
+  font-size: 24px;
+}
+.hour-col .bx-cloud-drizzle,
+.forecast-day .bx-cloud-drizzle {
+  color: #a0c4ff;
+  font-size: 24px;
+}
+.hour-col .bx-cloud-lightning,
+.forecast-day .bx-cloud-lightning {
+  color: #f4d03f;
+  font-size: 24px;
+}
+.hour-col .bx-snow,
+.forecast-day .bx-snow {
+  color: #caf0f8;
+  font-size: 24px;
+}
+.hour-col .bx-water,
+.forecast-day .bx-water {
+  color: #b0c4de;
+  font-size: 24px;
+}
+
+/* darken icons on clear sky */
+body.clear .hour-col .bx-sun,
+body.clear .forecast-day .bx-sun {
+  color: #c97b00;
+}
+body.clear .hour-col .bx-cloud,
+body.clear .forecast-day .bx-cloud {
+  color: rgba(255, 255, 255, 0.75);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+body.clear .hour-col .bx-cloud-rain,
+body.clear .forecast-day .bx-cloud-rain {
+  color: #2d7fc1;
+}
+body.clear .hour-col .bx-cloud-drizzle,
+body.clear .forecast-day .bx-cloud-drizzle {
+  color: #3a7abf;
+}
+body.clear .hour-col .bx-cloud-lightning,
+body.clear .forecast-day .bx-cloud-lightning {
+  color: #c9a800;
+}
+body.clear .hour-col .bx-snow,
+body.clear .forecast-day .bx-snow {
+  color: #8ab8cc;
+}
+body.clear .hour-col .bx-water,
+body.clear .forecast-day .bx-water {
+  color: #5a87a8;
+}
+
+/* search bar */
 .search {
   width: 100%;
   margin-bottom: 30px;
@@ -406,7 +424,12 @@ body.clear .mobile-hourly-card {
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* CHANGED: warm-white search bar on clear sky, very subtle */
+/* lighter search bar on rain */
+body.rain .search input {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* warm search on clear */
 body.clear .search input {
   background: rgba(255, 252, 245, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -431,7 +454,7 @@ body.clear .search input::placeholder {
   margin-left: 5px;
 }
 
-/* ---- main layout ---- */
+/* main layout */
 .main {
   display: flex;
   gap: 30px;
@@ -475,6 +498,7 @@ body.clear .search input::placeholder {
   opacity: 0.8;
   margin-bottom: 30px;
 }
+
 .details {
   display: flex;
   gap: 20px;
@@ -498,8 +522,10 @@ body.clear .search input::placeholder {
   opacity: 0.55;
   margin-top: 1px;
 }
+
 .tip {
   margin-top: 15px;
+  margin-bottom: 20px;
   font-size: 15px;
   opacity: 0.85;
   background: rgba(255, 255, 255, 0.1);
@@ -507,7 +533,7 @@ body.clear .search input::placeholder {
   border-radius: 12px;
 }
 
-/* ---- forecast ---- */
+/* forecast */
 .forecast {
   flex: 1;
   display: flex;
@@ -523,43 +549,9 @@ body.clear .search input::placeholder {
   padding: 10px 15px;
   gap: 10px;
 }
-
-/* CHANGED: warm-white tint on forecast tiles for clear sky */
 body.clear .forecast-day {
   background: rgba(255, 252, 245, 0.1);
 }
-
-/* CHANGED: darken icons on clear sky so they pop against the light bg */
-body.clear .hour-col .bx-sun,
-body.clear .forecast-day .bx-sun {
-  color: #c97b00;
-}
-body.clear .hour-col .bx-cloud,
-body.clear .forecast-day .bx-cloud {
-  color: rgba(255, 255, 255, 0.75);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
-}
-body.clear .hour-col .bx-cloud-rain,
-body.clear .forecast-day .bx-cloud-rain {
-  color: #2d7fc1;
-}
-body.clear .hour-col .bx-cloud-drizzle,
-body.clear .forecast-day .bx-cloud-drizzle {
-  color: #3a7abf;
-}
-body.clear .hour-col .bx-cloud-lightning,
-body.clear .forecast-day .bx-cloud-lightning {
-  color: #c9a800;
-}
-body.clear .hour-col .bx-snow,
-body.clear .forecast-day .bx-snow {
-  color: #8ab8cc;
-}
-body.clear .hour-col .bx-water,
-body.clear .forecast-day .bx-water {
-  color: #5a87a8;
-}
-
 .forecast-day .day-name {
   font-size: 16px;
   width: 80px;
@@ -578,6 +570,7 @@ body.clear .forecast-day .bx-water {
   text-align: right;
 }
 
+/* °c/°f toggle pill */
 .unit {
   font-size: 35px;
   background: rgba(255, 255, 255, 0.15);
@@ -589,18 +582,21 @@ body.clear .forecast-day .bx-water {
   cursor: pointer;
 }
 
-/* ---- mobile today ---- */
+/* mobile today — hidden on desktop */
 .mobile-today {
   display: none;
 }
 
-/* ---- responsive ---- */
+/* --- breakpoints --- */
+
+/* large screens */
 @media (min-width: 1200px) {
   .card-stack {
     max-width: 1000px;
   }
 }
 
+/* iPad */
 @media (min-width: 769px) and (max-width: 1024px) {
   .card-stack {
     width: 90%;
@@ -622,6 +618,7 @@ body.clear .forecast-day .bx-water {
   }
 }
 
+/* tablet */
 @media (max-width: 768px) {
   .card-stack {
     width: 95%;
@@ -642,11 +639,12 @@ body.clear .forecast-day .bx-water {
   }
 }
 
-/* floating search bar — mobile only, fixed at bottom */
+/* floating search — mobile only */
 .floating-search {
   display: none;
 }
 
+/* mobile */
 @media (max-width: 480px) {
   body {
     align-items: flex-end;
@@ -656,7 +654,7 @@ body.clear .forecast-day .bx-water {
     min-height: 100vh;
   }
 
-  /* CHANGED: reduced width by 20% — narrower pill */
+  /* floating search pill fixed at bottom */
   .floating-search {
     display: block;
     position: fixed;
@@ -668,7 +666,6 @@ body.clear .forecast-day .bx-water {
     z-index: 999;
   }
 
-  /* CHANGED: softer glass background so it doesn't glare on clear sky */
   .floating-search input {
     width: 100%;
     height: 44px;
@@ -692,15 +689,23 @@ body.clear .forecast-day .bx-water {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
       0 6px 24px rgba(0, 0, 0, 0.18),
-      0 1px 6px rgba(0, 0, 0, 0.1),
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.3),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-      inset 0 0 20px rgba(255, 255, 255, 0.03);
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.3);
   }
   .floating-search input::placeholder {
     color: rgba(255, 255, 255, 0.55);
   }
-  /* CHANGED: on clear sky, floating bar blends in more — warm-white, less bright */
+
+  /* lighter floating bar on rain */
+  body.rain .floating-search input {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(200, 220, 255, 0.08) 100%
+    );
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  /* warm floating bar on clear */
   body.clear .floating-search input {
     background: linear-gradient(
       135deg,
@@ -708,11 +713,11 @@ body.clear .forecast-day .bx-water {
       rgba(255, 248, 235, 0.03) 100%
     );
     border-top: 1px solid rgba(255, 255, 255, 0.3);
-    border-left: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow:
       0 6px 20px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
+
   .floating-search input.loading {
     outline: 2px solid rgba(255, 255, 255, 0.5);
     animation: inputpulse 1s ease-in-out infinite;
@@ -727,19 +732,14 @@ body.clear .forecast-day .bx-water {
     font-size: 13px;
     margin-top: 6px;
     margin-left: 12px;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
-  /* hide the search bar inside the card on mobile */
+  /* hide search inside card on mobile */
   .card .search {
     display: none;
   }
 
-  /* add bottom padding to card so content isn't hidden behind floating bar */
-  .card {
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
-  }
-
+  /* mobile today info above card */
   .mobile-today {
     display: flex;
     flex-direction: column;
@@ -791,6 +791,7 @@ body.clear .forecast-day .bx-water {
   }
   .mobile-today .m-tip {
     margin-top: 12px;
+    margin-bottom: 15px;
     font-size: 13px;
     opacity: 0.85;
     background: rgba(255, 255, 255, 0.1);
@@ -879,14 +880,13 @@ body.clear .forecast-day .bx-water {
     width: 70px;
     font-size: 12px;
   }
-
   .hourly-panel {
     display: none !important;
   }
 }
 
+/* small phones */
 @media (max-width: 375px) {
-  /* CHANGED: also reduce floating search on very small screens */
   .floating-search {
     width: calc(100% - 180px);
     max-width: 200px;
@@ -903,6 +903,7 @@ body.clear .forecast-day .bx-water {
   }
 }
 
+/* landscape on phones */
 @media (max-height: 500px) and (orientation: landscape) {
   .mobile-today {
     padding: 20px 25px 10px;
@@ -916,44 +917,4 @@ body.clear .forecast-day .bx-water {
   .card {
     border-radius: 20px;
   }
-}
-
-/* air quality — desktop */
-.aqi {
-  text-align: center;
-  margin: 10px 0 20px;
-}
-.aqi-number {
-  /* matches city name size */
-  font-size: clamp(22px, 4vw, 28px);
-  font-weight: 500;
-}
-.aqi-label {
-  font-size: 13px;
-  opacity: 0.6;
-  margin-top: 3px;
-}
-
-/* air quality — mobile */
-.m-aqi {
-  margin-top: 10px;
-  margin-bottom: 5px;
-  text-align: center;
-}
-.m-aqi-number {
-  font-size: 22px;
-  font-weight: 500;
-}
-.m-aqi-label {
-  font-size: 12px;
-  opacity: 0.6;
-  margin-top: 2px;
-}
-
-/* gap between tip and hourly card below */
-.tip {
-  margin-bottom: 20px;
-}
-.mobile-today .m-tip {
-  margin-bottom: 15px;
 }

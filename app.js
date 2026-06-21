@@ -2,7 +2,7 @@ const apiUrl = "/api/weather?";
 const forecastUrl = "/api/forecast?";
 const bgAnimation = document.getElementById("bg-animation");
 
-// cache all DOM refs once — no repeated querySelector on every update
+// cache all DOM refs once
 const dom = {
   searchBox: document.querySelector(".search input"),
   tempEl: document.querySelector(".temp"),
@@ -37,7 +37,7 @@ const dom = {
 let currentTempC = 0;
 let lastWeatherData = null;
 let isCelsius = true;
-let lastCondition = null; // guard so bg only rebuilds when condition changes
+let lastCondition = null;
 
 dom.tempEl.onclick = toggleTemp;
 dom.mTemp.onclick = toggleTemp;
@@ -54,23 +54,12 @@ const ICONS = {
   Haze: "bx bx-water",
   Smoke: "bx bx-water",
 };
-function getIcon(condition) {
-  return ICONS[condition] || "bx bx-cloud";
-}
+const getIcon = (c) => ICONS[c] || "bx bx-cloud";
 
-function getWindFeel(w) {
-  if (w < 5) return "Calm";
-  if (w < 20) return "Breezy";
-  if (w < 40) return "Windy";
-  return "Very windy";
-}
-
-function getHumidityFeel(h) {
-  if (h < 30) return "Dry";
-  if (h < 60) return "Comfortable";
-  if (h < 80) return "Humid";
-  return "Oppressive";
-}
+const getWindFeel = (w) =>
+  w < 5 ? "Calm" : w < 20 ? "Breezy" : w < 40 ? "Windy" : "Very windy";
+const getHumidityFeel = (h) =>
+  h < 30 ? "Dry" : h < 60 ? "Comfortable" : h < 80 ? "Humid" : "Oppressive";
 
 function getTip(condition, temp, humidity, wind) {
   if (["Rain", "Drizzle", "Thunderstorm"].includes(condition))
@@ -97,10 +86,14 @@ async function checkweather(cityQuery) {
 
     clearError();
     lastWeatherData = data;
-    fetchAirQuality(data.coord.lat, data.coord.lon);
 
+    // flash success glow on search bars
     dom.searchBox.classList.add("success");
-    setTimeout(() => dom.searchBox.classList.remove("success"), 600);
+    dom.floatingInput.classList.add("success");
+    setTimeout(() => {
+      dom.searchBox.classList.remove("success");
+      dom.floatingInput.classList.remove("success");
+    }, 600);
 
     currentTempC = Math.round(data.main.temp);
     isCelsius = true;
@@ -114,7 +107,7 @@ async function checkweather(cityQuery) {
     const windFeel = getWindFeel(wind);
     const humidityFeel = getHumidityFeel(humidity);
 
-    // batch all desktop DOM writes together
+    // update desktop
     dom.city.textContent = data.name;
     dom.tempEl.innerHTML = currentTempC + '<span class="unit">°c</span>';
     dom.feels.textContent = "Feels like " + feelsLike + "°c";
@@ -127,7 +120,7 @@ async function checkweather(cityQuery) {
     dom.windFeel.textContent = windFeel;
     dom.tip.textContent = tip;
 
-    // mobile writes — only touch DOM if we're on mobile
+    // update mobile only if on small screen
     if (window.innerWidth <= 480) {
       dom.mobileToday.style.display = "flex";
       dom.mTemp.innerHTML = currentTempC + '<span class="unit">°c</span>';
@@ -139,7 +132,7 @@ async function checkweather(cityQuery) {
       dom.mTip.textContent = tip;
     }
 
-    // only rebuild bg particles if weather condition actually changed
+    // only rebuild bg if condition changed
     if (condition !== lastCondition) {
       setBackground(condition);
       lastCondition = condition;
@@ -161,12 +154,10 @@ function toggleTemp() {
   dom.tempEl.innerHTML = display(currentTempC);
   dom.mTemp.innerHTML = display(currentTempC);
 
-  // batch querySelectorAll — one call each
   dom.forecast.querySelectorAll(".day-temp").forEach((el) => {
     const c = parseInt(el.dataset.tempc);
     el.textContent = isCelsius ? c + "°c" : toF(c) + "°f";
   });
-
   document.querySelectorAll(".hour-temp").forEach((el) => {
     const c = parseInt(el.dataset.tempc);
     el.textContent = isCelsius ? c + "°c" : toF(c) + "°f";
@@ -181,7 +172,6 @@ function showError(msg) {
     dom.floatingError.style.display = "block";
   }
 }
-
 function clearError() {
   dom.errorEl.textContent = "";
   dom.errorEl.style.display = "none";
@@ -195,6 +185,7 @@ async function fetchForecast(cityQuery) {
   const res = await fetch(forecastUrl + cityQuery);
   const data = await res.json();
 
+  // pick one reading per day around noon
   const daily = {};
   data.list.forEach((item) => {
     const date = new Date(item.dt * 1000);
@@ -203,7 +194,6 @@ async function fetchForecast(cityQuery) {
     if (!daily[day] && hour >= 11 && hour <= 14) daily[day] = item;
   });
 
-  // use DocumentFragment — single DOM insertion instead of one per day
   const frag = document.createDocumentFragment();
   Object.entries(daily)
     .slice(0, 5)
@@ -215,7 +205,6 @@ async function fetchForecast(cityQuery) {
       div.innerHTML = `<span class="day-name">${day}</span><i class="${getIcon(condition)}"></i><span class="day-temp" data-tempc="${temp}">${temp}°c</span><span class="day-condition">${condition}</span>`;
       frag.appendChild(div);
     });
-
   dom.forecast.innerHTML = "";
   dom.forecast.appendChild(frag);
 
@@ -225,20 +214,17 @@ async function fetchForecast(cityQuery) {
 function renderHourly(slots) {
   const cols = buildHourlyCols(slots);
 
-  // desktop strip
   const dFrag = document.createDocumentFragment();
   cols.forEach((col) => dFrag.appendChild(col.cloneNode(true)));
   dom.hourlyStrip.innerHTML = "";
   dom.hourlyStrip.appendChild(dFrag);
 
-  // mobile strip
   const mFrag = document.createDocumentFragment();
   cols.forEach((col) => mFrag.appendChild(col.cloneNode(true)));
   dom.mobileHourlyStrip.innerHTML = "";
   dom.mobileHourlyStrip.appendChild(mFrag);
 
-  const isMobile = window.innerWidth <= 480;
-  if (!isMobile) dom.hourlyPanel.classList.add("open");
+  if (window.innerWidth > 480) dom.hourlyPanel.classList.add("open");
   else dom.mobileHourlyCard.classList.add("visible");
 }
 
@@ -249,6 +235,7 @@ function buildHourlyCols(slots) {
     ? currentTempC + "°c"
     : Math.round((currentTempC * 9) / 5 + 32) + "°f";
 
+  // "Now" column
   const nowCol = document.createElement("div");
   nowCol.className = "hour-col";
   nowCol.innerHTML = `<span class="hour-label">Now</span><i class="${getIcon(nowCondition)}"></i><span class="hour-temp" data-tempc="${currentTempC}">${tempStr}</span>`;
@@ -306,9 +293,8 @@ function setBackground(condition) {
     },
   };
 
-  if (map[condition]) {
-    map[condition]();
-  } else if (["Mist", "Fog", "Haze", "Smoke"].includes(condition)) {
+  if (map[condition]) map[condition]();
+  else if (["Mist", "Fog", "Haze", "Smoke"].includes(condition)) {
     document.body.classList.add("mist");
     createMist();
   }
@@ -321,7 +307,6 @@ function createSun() {
 }
 
 function createClouds(count) {
-  // build all clouds in one fragment
   const frag = document.createDocumentFragment();
   const bumps = [
     "position:absolute;background:rgba(255,255,255,0.18);border-radius:50%;width:80px;height:80px;top:-40px;left:20px;",
@@ -386,6 +371,7 @@ function createMist() {
   bgAnimation.appendChild(frag);
 }
 
+// on load: clear inputs, load Delhi, focus search on desktop
 window.addEventListener("load", () => {
   dom.searchBox.value = "";
   dom.floatingInput.value = "";
@@ -423,9 +409,9 @@ dom.floatingInput.addEventListener("input", () => {
   }, 400);
 });
 
+// sync mobile/desktop view on resize or orientation change
 function syncMobileView() {
   if (!lastWeatherData) return;
-
   const isMobile = window.innerWidth <= 480;
 
   if (isMobile) {
@@ -438,7 +424,6 @@ function syncMobileView() {
     const humidity = lastWeatherData.main.humidity;
     const wind = lastWeatherData.wind.speed;
     const feelsLike = Math.round(lastWeatherData.main.feels_like);
-    const tip = getTip(condition, temp, humidity, wind);
     const unit = isCelsius ? "°c" : "°f";
     const displayTemp = isCelsius
       ? currentTempC
@@ -450,7 +435,7 @@ function syncMobileView() {
     dom.mCondition.textContent = condition;
     dom.mHumidity.innerHTML = `<i class="bx bx-air"></i> ${humidity}% Humidity · ${getHumidityFeel(humidity)}`;
     dom.mWind.innerHTML = `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${getWindFeel(wind)}`;
-    dom.mTip.textContent = tip;
+    dom.mTip.textContent = getTip(condition, temp, humidity, wind);
   } else {
     dom.mobileToday.style.display = "none";
     dom.mobileHourlyCard.classList.remove("visible");
@@ -459,35 +444,12 @@ function syncMobileView() {
   }
 }
 
-// throttle resize — runs at most once per 150ms instead of hundreds of times
+// throttle resize — fires at most once per 150ms
 let resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(syncMobileView, 150);
 });
-
 window.addEventListener("orientationchange", () => {
   setTimeout(syncMobileView, 150);
 });
-
-// fetch air quality using coordinates from weather data
-async function fetchAirQuality(lat, lon) {
-  const res = await fetch(`/api/airquality?lat=${lat}&lon=${lon}`);
-  const data = await res.json();
-  const aqi = data.list[0].main.aqi;
-
-  // OWM AQI: 1=Good 2=Fair 3=Moderate 4=Poor 5=Very Poor
-  const labels = {
-    1: "Good",
-    2: "Fair",
-    3: "Moderate",
-    4: "Poor",
-    5: "Very Poor",
-  };
-  const label = labels[aqi];
-
-  document.querySelector(".aqi-number").innerHTML = aqi + " AQI";
-  document.querySelector(".aqi-label").innerHTML = label;
-  document.querySelector(".m-aqi-number").innerHTML = aqi + " AQI";
-  document.querySelector(".m-aqi-label").innerHTML = label;
-}
