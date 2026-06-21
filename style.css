@@ -23,9 +23,9 @@ body {
   transition: background 1s ease;
 }
 
-/* CHANGED: duller, less saturated clear sky gradient */
+/* CHANGED: warm, muted clear sky — soft steel-blue top fading to pale haze */
 body.clear {
-  background: linear-gradient(to bottom, #3a7fa8, #6aadcc);
+  background: linear-gradient(to bottom, #5b7fa6, #a8c4d8);
 }
 body.clouds {
   background: linear-gradient(to bottom, #bdc3c7, #2c3e50);
@@ -232,18 +232,20 @@ body.mist {
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* CHANGED: dull down card glass on clear weather */
+/* CHANGED: nearly transparent warm-white glass on clear — kills the vivid blue tint */
 body.clear .card,
 body.clear .hourly-panel,
 body.clear .mobile-hourly-card {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.02) 100%
+    rgba(255, 252, 245, 0.13) 0%,
+    rgba(255, 250, 240, 0.05) 100%
   );
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
   box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 20px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .card {
@@ -402,9 +404,10 @@ body.clear .mobile-hourly-card {
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* CHANGED: tone down search bar on clear sky so it doesn't glare */
+/* CHANGED: warm-white search bar on clear sky, very subtle */
 body.clear .search input {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 252, 245, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 body.clear .search input::placeholder {
   color: rgba(255, 255, 255, 0.5);
@@ -513,9 +516,9 @@ body.clear .search input::placeholder {
   gap: 10px;
 }
 
-/* CHANGED: dull forecast day cards on clear */
+/* CHANGED: warm-white tint on forecast tiles for clear sky */
 body.clear .forecast-day {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 252, 245, 0.1);
 }
 
 .forecast-day .day-name {
@@ -657,6 +660,19 @@ body.clear .forecast-day {
   }
   .floating-search input::placeholder {
     color: rgba(255, 255, 255, 0.55);
+  }
+  /* CHANGED: on clear sky, floating bar blends in more — warm-white, less bright */
+  body.clear .floating-search input {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 252, 245, 0.07) 0%,
+      rgba(255, 248, 235, 0.03) 100%
+    );
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    border-left: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   .floating-search input.loading {
     outline: 2px solid rgba(255, 255, 255, 0.5);
