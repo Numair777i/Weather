@@ -1,7 +1,7 @@
 const CACHE = "weather-v1";
 
 // files to cache for offline use
-const FILES = ["/", "/index.html", "/style.css", "/app.js"];
+const FILES = ["./", "./index.html", "./style.css", "./app.js"];
 
 // install — cache all files
 self.addEventListener("install", (e) => {
