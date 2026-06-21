@@ -1,29 +1,61 @@
 const apiUrl = "/api/weather?";
 const forecastUrl = "/api/forecast?";
-const searchBox = document.querySelector(".search input");
 const bgAnimation = document.getElementById("bg-animation");
-const tempEl = document.querySelector(".temp");
+
+// cache all DOM refs once — no repeated querySelector on every update
+const dom = {
+  searchBox: document.querySelector(".search input"),
+  tempEl: document.querySelector(".temp"),
+  city: document.querySelector(".city"),
+  feels: document.querySelector(".feels"),
+  condition: document.querySelector(".condition"),
+  humidity: document.querySelector(".humidity"),
+  humidityFeel: document.querySelector(".humidity-feel"),
+  humidityLabel: document.querySelector(".humidity-label"),
+  wind: document.querySelector(".wind"),
+  windFeel: document.querySelector(".wind-feel"),
+  windLabel: document.querySelector(".wind-label"),
+  tip: document.querySelector(".tip"),
+  forecast: document.getElementById("forecast"),
+  hourlyPanel: document.getElementById("hourly-panel"),
+  hourlyStrip: document.getElementById("hourly-strip"),
+  mobileToday: document.querySelector(".mobile-today"),
+  mobileHourlyCard: document.getElementById("mobile-hourly-card"),
+  mobileHourlyStrip: document.getElementById("mobile-hourly-strip"),
+  mCity: document.querySelector(".m-city"),
+  mTemp: document.querySelector(".m-temp"),
+  mFeels: document.querySelector(".m-feels"),
+  mCondition: document.querySelector(".m-condition"),
+  mHumidity: document.querySelector(".m-humidity"),
+  mWind: document.querySelector(".m-wind"),
+  mTip: document.querySelector(".m-tip"),
+  errorEl: document.querySelector(".error"),
+  floatingInput: document.getElementById("floating-search-input"),
+  floatingError: document.getElementById("floating-error"),
+};
 
 let currentTempC = 0;
 let lastWeatherData = null;
 let isCelsius = true;
+let lastCondition = null; // guard so bg only rebuilds when condition changes
 
-tempEl.onclick = toggleTemp;
+dom.tempEl.onclick = toggleTemp;
+dom.mTemp.onclick = toggleTemp;
 
+const ICONS = {
+  Clear: "bx bx-sun",
+  Clouds: "bx bx-cloud",
+  Rain: "bx bx-cloud-rain",
+  Drizzle: "bx bx-cloud-drizzle",
+  Thunderstorm: "bx bx-cloud-lightning",
+  Snow: "bx bx-snow",
+  Mist: "bx bx-water",
+  Fog: "bx bx-water",
+  Haze: "bx bx-water",
+  Smoke: "bx bx-water",
+};
 function getIcon(condition) {
-  const icons = {
-    Clear: "bx bx-sun",
-    Clouds: "bx bx-cloud",
-    Rain: "bx bx-cloud-rain",
-    Drizzle: "bx bx-cloud-drizzle",
-    Thunderstorm: "bx bx-cloud-lightning",
-    Snow: "bx bx-snow",
-    Mist: "bx bx-water",
-    Fog: "bx bx-water",
-    Haze: "bx bx-water",
-    Smoke: "bx bx-water",
-  };
-  return icons[condition] || "bx bx-cloud";
+  return ICONS[condition] || "bx bx-cloud";
 }
 
 function getWindFeel(w) {
@@ -66,8 +98,8 @@ async function checkweather(cityQuery) {
     clearError();
     lastWeatherData = data;
 
-    searchBox.classList.add("success");
-    setTimeout(() => searchBox.classList.remove("success"), 600);
+    dom.searchBox.classList.add("success");
+    setTimeout(() => dom.searchBox.classList.remove("success"), 600);
 
     currentTempC = Math.round(data.main.temp);
     isCelsius = true;
@@ -78,38 +110,40 @@ async function checkweather(cityQuery) {
     const wind = data.wind.speed;
     const feelsLike = Math.round(data.main.feels_like);
     const tip = getTip(condition, temp, humidity, wind);
+    const windFeel = getWindFeel(wind);
+    const humidityFeel = getHumidityFeel(humidity);
 
-    document.querySelector(".city").innerHTML = data.name;
-    tempEl.innerHTML = currentTempC + `<span class="unit">°c</span>`;
-    document.querySelector(".feels").innerHTML =
-      "Feels like " + feelsLike + "°c";
-    document.querySelector(".condition").innerHTML = condition;
-    document.querySelector(".humidity").innerHTML = humidity + "%";
-    document.querySelector(".humidity-label").innerHTML = "Humidity";
-    document.querySelector(".humidity-feel").innerHTML = getHumidityFeel(humidity);
-    document.querySelector(".wind").innerHTML = wind + " km/h";
-    document.querySelector(".wind-label").innerHTML = "Wind";
-    document.querySelector(".wind-feel").innerHTML = getWindFeel(wind);
-    document.querySelector(".tip").innerHTML = tip;
+    // batch all desktop DOM writes together
+    dom.city.textContent = data.name;
+    dom.tempEl.innerHTML = currentTempC + '<span class="unit">°c</span>';
+    dom.feels.textContent = "Feels like " + feelsLike + "°c";
+    dom.condition.textContent = condition;
+    dom.humidity.textContent = humidity + "%";
+    dom.humidityLabel.textContent = "Humidity";
+    dom.humidityFeel.textContent = humidityFeel;
+    dom.wind.textContent = wind + " km/h";
+    dom.windLabel.textContent = "Wind";
+    dom.windFeel.textContent = windFeel;
+    dom.tip.textContent = tip;
 
+    // mobile writes — only touch DOM if we're on mobile
     if (window.innerWidth <= 480) {
-      const mobileToday = document.querySelector(".mobile-today");
-      mobileToday.style.display = "flex";
-      const mTemp = document.querySelector(".m-temp");
-      mTemp.innerHTML = currentTempC + `<span class="unit">°c</span>`;
-      mTemp.onclick = toggleTemp;
-      document.querySelector(".m-city").innerHTML = data.name;
-      document.querySelector(".m-feels").innerHTML =
-        "Feels like " + feelsLike + "°c";
-      document.querySelector(".m-condition").innerHTML = condition;
-      document.querySelector(".m-humidity").innerHTML =
-        `<i class="bx bx-air"></i> ${humidity}% Humidity · ${getHumidityFeel(humidity)}`;
-      document.querySelector(".m-wind").innerHTML =
-        `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${getWindFeel(wind)}`;
-      document.querySelector(".m-tip").innerHTML = tip;
+      dom.mobileToday.style.display = "flex";
+      dom.mTemp.innerHTML = currentTempC + '<span class="unit">°c</span>';
+      dom.mCity.textContent = data.name;
+      dom.mFeels.textContent = "Feels like " + feelsLike + "°c";
+      dom.mCondition.textContent = condition;
+      dom.mHumidity.innerHTML = `<i class="bx bx-air"></i> ${humidity}% Humidity · ${humidityFeel}`;
+      dom.mWind.innerHTML = `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${windFeel}`;
+      dom.mTip.textContent = tip;
     }
 
-    setBackground(condition);
+    // only rebuild bg particles if weather condition actually changed
+    if (condition !== lastCondition) {
+      setBackground(condition);
+      lastCondition = condition;
+    }
+
     fetchForecast(cityQuery);
   } catch (err) {
     showError("Something went wrong. Try again.");
@@ -118,44 +152,41 @@ async function checkweather(cityQuery) {
 
 function toggleTemp() {
   isCelsius = !isCelsius;
+  const toF = (c) => Math.round((c * 9) / 5 + 32);
+  const unit = isCelsius ? "°c" : "°f";
   const display = (c) =>
-    isCelsius
-      ? c + `<span class="unit">°c</span>`
-      : Math.round((c * 9) / 5 + 32) + `<span class="unit">°f</span>`;
+    (isCelsius ? c : toF(c)) + `<span class="unit">${unit}</span>`;
 
-  tempEl.innerHTML = display(currentTempC);
-  const mTemp = document.querySelector(".m-temp");
-  if (mTemp) mTemp.innerHTML = display(currentTempC);
+  dom.tempEl.innerHTML = display(currentTempC);
+  dom.mTemp.innerHTML = display(currentTempC);
 
-  document.querySelectorAll(".day-temp").forEach((el) => {
+  // batch querySelectorAll — one call each
+  dom.forecast.querySelectorAll(".day-temp").forEach((el) => {
     const c = parseInt(el.dataset.tempc);
-    el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
+    el.textContent = isCelsius ? c + "°c" : toF(c) + "°f";
   });
 
   document.querySelectorAll(".hour-temp").forEach((el) => {
     const c = parseInt(el.dataset.tempc);
-    el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
+    el.textContent = isCelsius ? c + "°c" : toF(c) + "°f";
   });
 }
 
 function showError(msg) {
-  const el = document.querySelector(".error");
-  el.innerHTML = msg;
-  el.style.display = "block";
-  const fel = document.getElementById("floating-error");
-  if (fel) {
-    fel.innerHTML = msg;
-    fel.style.display = "block";
+  dom.errorEl.textContent = msg;
+  dom.errorEl.style.display = "block";
+  if (dom.floatingError) {
+    dom.floatingError.textContent = msg;
+    dom.floatingError.style.display = "block";
   }
 }
+
 function clearError() {
-  const el = document.querySelector(".error");
-  el.innerHTML = "";
-  el.style.display = "none";
-  const fel = document.getElementById("floating-error");
-  if (fel) {
-    fel.innerHTML = "";
-    fel.style.display = "none";
+  dom.errorEl.textContent = "";
+  dom.errorEl.style.display = "none";
+  if (dom.floatingError) {
+    dom.floatingError.textContent = "";
+    dom.floatingError.style.display = "none";
   }
 }
 
@@ -171,62 +202,55 @@ async function fetchForecast(cityQuery) {
     if (!daily[day] && hour >= 11 && hour <= 14) daily[day] = item;
   });
 
-  const forecastEl = document.getElementById("forecast");
-  forecastEl.innerHTML = "";
-
+  // use DocumentFragment — single DOM insertion instead of one per day
+  const frag = document.createDocumentFragment();
   Object.entries(daily)
     .slice(0, 5)
     .forEach(([day, item]) => {
       const condition = item.weather[0].main;
       const temp = Math.round(item.main.temp);
       const div = document.createElement("div");
-      div.classList.add("forecast-day");
-      div.innerHTML = `
-        <span class="day-name">${day}</span>
-        <i class="${getIcon(condition)}"></i>
-        <span class="day-temp" data-tempc="${temp}">${temp}°c</span>
-        <span class="day-condition">${condition}</span>
-      `;
-      forecastEl.appendChild(div);
+      div.className = "forecast-day";
+      div.innerHTML = `<span class="day-name">${day}</span><i class="${getIcon(condition)}"></i><span class="day-temp" data-tempc="${temp}">${temp}°c</span><span class="day-condition">${condition}</span>`;
+      frag.appendChild(div);
     });
+
+  dom.forecast.innerHTML = "";
+  dom.forecast.appendChild(frag);
 
   renderHourly(data.list.slice(0, 8));
 }
 
 function renderHourly(slots) {
-  const panel = document.getElementById("hourly-panel");
-  const strip = document.getElementById("hourly-strip");
-  const mobileCard = document.getElementById("mobile-hourly-card");
-  const mobileStrip = document.getElementById("mobile-hourly-strip");
-
   const cols = buildHourlyCols(slots);
 
-  strip.innerHTML = "";
-  cols.forEach((col) => strip.appendChild(col.cloneNode(true)));
+  // desktop strip
+  const dFrag = document.createDocumentFragment();
+  cols.forEach((col) => dFrag.appendChild(col.cloneNode(true)));
+  dom.hourlyStrip.innerHTML = "";
+  dom.hourlyStrip.appendChild(dFrag);
 
-  mobileStrip.innerHTML = "";
-  cols.forEach((col) => mobileStrip.appendChild(col.cloneNode(true)));
+  // mobile strip
+  const mFrag = document.createDocumentFragment();
+  cols.forEach((col) => mFrag.appendChild(col.cloneNode(true)));
+  dom.mobileHourlyStrip.innerHTML = "";
+  dom.mobileHourlyStrip.appendChild(mFrag);
 
-  if (window.innerWidth > 480) {
-    panel.classList.add("open");
-  }
-
-  if (window.innerWidth <= 480) {
-    mobileCard.classList.add("visible");
-  }
+  const isMobile = window.innerWidth <= 480;
+  if (!isMobile) dom.hourlyPanel.classList.add("open");
+  else dom.mobileHourlyCard.classList.add("visible");
 }
 
 function buildHourlyCols(slots) {
   const cols = [];
+  const nowCondition = lastWeatherData.weather[0].main;
+  const tempStr = isCelsius
+    ? currentTempC + "°c"
+    : Math.round((currentTempC * 9) / 5 + 32) + "°f";
 
   const nowCol = document.createElement("div");
-  nowCol.classList.add("hour-col");
-  const nowCondition = lastWeatherData.weather[0].main;
-  nowCol.innerHTML = `
-    <span class="hour-label">Now</span>
-    <i class="${getIcon(nowCondition)}"></i>
-    <span class="hour-temp" data-tempc="${currentTempC}">${isCelsius ? currentTempC + "°c" : Math.round((currentTempC * 9) / 5 + 32) + "°f"}</span>
-  `;
+  nowCol.className = "hour-col";
+  nowCol.innerHTML = `<span class="hour-label">Now</span><i class="${getIcon(nowCondition)}"></i><span class="hour-temp" data-tempc="${currentTempC}">${tempStr}</span>`;
   cols.push(nowCol);
 
   slots.slice(1, 8).forEach((item) => {
@@ -237,13 +261,12 @@ function buildHourlyCols(slots) {
       hour: "numeric",
       hour12: true,
     });
+    const tStr = isCelsius
+      ? temp + "°c"
+      : Math.round((temp * 9) / 5 + 32) + "°f";
     const col = document.createElement("div");
-    col.classList.add("hour-col");
-    col.innerHTML = `
-      <span class="hour-label">${label}</span>
-      <i class="${getIcon(condition)}"></i>
-      <span class="hour-temp" data-tempc="${temp}">${isCelsius ? temp + "°c" : Math.round((temp * 9) / 5 + 32) + "°f"}</span>
-    `;
+    col.className = "hour-col";
+    col.innerHTML = `<span class="hour-label">${label}</span><i class="${getIcon(condition)}"></i><span class="hour-temp" data-tempc="${temp}">${tStr}</span>`;
     cols.push(col);
   });
 
@@ -254,25 +277,36 @@ function setBackground(condition) {
   document.body.className = "";
   bgAnimation.innerHTML = "";
 
-  if (condition === "Clear") {
-    document.body.classList.add("clear");
-    createSun();
-  } else if (condition === "Clouds") {
-    document.body.classList.add("clouds");
-    createClouds(9);
-  } else if (condition === "Rain") {
-    document.body.classList.add("rain");
-    createDrops(80, "raindrop");
-  } else if (condition === "Drizzle") {
-    document.body.classList.add("drizzle");
-    createDrops(40, "drizzledrop");
-  } else if (condition === "Thunderstorm") {
-    document.body.classList.add("thunderstorm");
-    createDrops(80, "raindrop");
-    createLightning();
-  } else if (condition === "Snow") {
-    document.body.classList.add("snow");
-    createSnow(60);
+  const map = {
+    Clear: () => {
+      document.body.classList.add("clear");
+      createSun();
+    },
+    Clouds: () => {
+      document.body.classList.add("clouds");
+      createClouds(6);
+    },
+    Rain: () => {
+      document.body.classList.add("rain");
+      createDrops(50, "raindrop");
+    },
+    Drizzle: () => {
+      document.body.classList.add("drizzle");
+      createDrops(25, "drizzledrop");
+    },
+    Thunderstorm: () => {
+      document.body.classList.add("thunderstorm");
+      createDrops(50, "raindrop");
+      createLightning();
+    },
+    Snow: () => {
+      document.body.classList.add("snow");
+      createSnow(35);
+    },
+  };
+
+  if (map[condition]) {
+    map[condition]();
   } else if (["Mist", "Fog", "Haze", "Smoke"].includes(condition)) {
     document.body.classList.add("mist");
     createMist();
@@ -281,126 +315,109 @@ function setBackground(condition) {
 
 function createSun() {
   const sun = document.createElement("div");
-  sun.classList.add("sun");
+  sun.className = "sun";
   bgAnimation.appendChild(sun);
 }
 
 function createClouds(count) {
+  // build all clouds in one fragment
+  const frag = document.createDocumentFragment();
+  const bumps = [
+    "position:absolute;background:rgba(255,255,255,0.18);border-radius:50%;width:80px;height:80px;top:-40px;left:20px;",
+    "position:absolute;background:rgba(255,255,255,0.18);border-radius:50%;width:100px;height:100px;top:-55px;left:60px;",
+    "position:absolute;background:rgba(255,255,255,0.18);border-radius:50%;width:70px;height:70px;top:-35px;left:130px;",
+  ];
   for (let i = 0; i < count; i++) {
     const cloud = document.createElement("div");
-    cloud.classList.add("cloud");
-    cloud.style.top = Math.random() * 100 + "vh";
-    cloud.style.animationDuration = Math.random() * 15 + 10 + "s";
-    cloud.style.animationDelay = "-" + Math.random() * 15 + "s";
-    cloud.style.opacity = Math.random() * 0.4 + 0.4;
-    cloud.style.transform = `scale(${Math.random() * 0.8 + 0.6})`;
-
-    [
-      { width: "80px", height: "80px", top: "-40px", left: "20px" },
-      { width: "100px", height: "100px", top: "-55px", left: "60px" },
-      { width: "70px", height: "70px", top: "-35px", left: "130px" },
-    ].forEach((b) => {
-      const bump = document.createElement("div");
-      bump.style.cssText = `position:absolute;background:rgba(255,255,255,0.18);border-radius:50%;width:${b.width};height:${b.height};top:${b.top};left:${b.left};`;
-      cloud.appendChild(bump);
+    cloud.className = "cloud";
+    cloud.style.cssText = `top:${Math.random() * 100}vh;animation-duration:${Math.random() * 15 + 10}s;animation-delay:-${Math.random() * 15}s;opacity:${Math.random() * 0.4 + 0.4};transform:scale(${Math.random() * 0.8 + 0.6})`;
+    bumps.forEach((css) => {
+      const b = document.createElement("div");
+      b.style.cssText = css;
+      cloud.appendChild(b);
     });
-
-    bgAnimation.appendChild(cloud);
+    frag.appendChild(cloud);
   }
+  bgAnimation.appendChild(frag);
 }
 
 function createDrops(count, type) {
+  const frag = document.createDocumentFragment();
   for (let i = 0; i < count; i++) {
     const drop = document.createElement("div");
-    drop.classList.add("particle", type);
-    drop.style.left = Math.random() * 100 + "vw";
-    drop.style.animationDuration = Math.random() * 0.5 + 0.5 + "s";
-    drop.style.animationDelay = Math.random() * 2 + "s";
-    bgAnimation.appendChild(drop);
+    drop.className = `particle ${type}`;
+    drop.style.cssText = `left:${Math.random() * 100}vw;animation-duration:${Math.random() * 0.5 + 0.5}s;animation-delay:${Math.random() * 2}s`;
+    frag.appendChild(drop);
   }
+  bgAnimation.appendChild(frag);
 }
 
 function createSnow(count) {
+  const frag = document.createDocumentFragment();
   for (let i = 0; i < count; i++) {
+    const size = Math.random() * 6 + 4;
     const flake = document.createElement("div");
-    flake.classList.add("particle", "snowflake");
-    flake.style.left = Math.random() * 100 + "vw";
-    flake.style.animationDuration = Math.random() * 3 + 3 + "s";
-    flake.style.animationDelay = Math.random() * 5 + "s";
-    flake.style.width = flake.style.height = Math.random() * 6 + 4 + "px";
-    bgAnimation.appendChild(flake);
+    flake.className = "particle snowflake";
+    flake.style.cssText = `left:${Math.random() * 100}vw;animation-duration:${Math.random() * 3 + 3}s;animation-delay:${Math.random() * 5}s;width:${size}px;height:${size}px`;
+    frag.appendChild(flake);
   }
+  bgAnimation.appendChild(frag);
 }
 
 function createLightning() {
-  for (let i = 0; i < 4; i++) {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 3; i++) {
     const flash = document.createElement("div");
-    flash.style.cssText = `
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(100, 150, 255, 0.08);
-      animation: flash ${Math.random() * 4 + 3}s ease-in-out infinite;
-      animation-delay: ${Math.random() * 5}s;
-      pointer-events: none;
-      z-index: 0;
-    `;
-    bgAnimation.appendChild(flash);
+    flash.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(100,150,255,0.08);animation:flash ${Math.random() * 4 + 3}s ease-in-out infinite;animation-delay:${Math.random() * 5}s;pointer-events:none;z-index:0;`;
+    frag.appendChild(flash);
   }
+  bgAnimation.appendChild(frag);
 }
 
 function createMist() {
-  for (let i = 0; i < 8; i++) {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 6; i++) {
     const layer = document.createElement("div");
-    layer.classList.add("mistlayer");
-    layer.style.top = i * 12 + "vh";
-    layer.style.animationDuration = Math.random() * 15 + 10 + "s";
-    layer.style.animationDelay = "-" + Math.random() * 10 + "s";
-    layer.style.opacity = Math.random() * 0.3 + 0.15;
-    bgAnimation.appendChild(layer);
+    layer.className = "mistlayer";
+    layer.style.cssText = `top:${i * 14}vh;animation-duration:${Math.random() * 15 + 10}s;animation-delay:-${Math.random() * 10}s;opacity:${Math.random() * 0.3 + 0.15}`;
+    frag.appendChild(layer);
   }
+  bgAnimation.appendChild(frag);
 }
 
 window.addEventListener("load", () => {
-  searchBox.value = "";
-  floatingInput.value = "";
+  dom.searchBox.value = "";
+  dom.floatingInput.value = "";
   checkweather("city=Delhi");
-
-  if (window.innerWidth > 768) {
-    searchBox.focus();
-  }
+  if (window.innerWidth > 768) dom.searchBox.focus();
 });
 
 let debounceTimer;
-searchBox.addEventListener("input", () => {
+
+dom.searchBox.addEventListener("input", () => {
   clearTimeout(debounceTimer);
-  searchBox.classList.remove("loading");
+  dom.searchBox.classList.remove("loading");
   debounceTimer = setTimeout(() => {
-    const cleanCity = searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
-    if (cleanCity) {
-      searchBox.classList.add("loading");
-      checkweather(`city=${cleanCity}`).finally(() => {
-        searchBox.classList.remove("loading");
-      });
+    const city = dom.searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
+    if (city) {
+      dom.searchBox.classList.add("loading");
+      checkweather(`city=${city}`).finally(() =>
+        dom.searchBox.classList.remove("loading"),
+      );
     }
   }, 400);
 });
 
-// floating search — mobile only, mirrors the main search box
-const floatingInput = document.getElementById("floating-search-input");
-const floatingError = document.getElementById("floating-error");
-
-floatingInput.addEventListener("input", () => {
+dom.floatingInput.addEventListener("input", () => {
   clearTimeout(debounceTimer);
-  floatingInput.classList.remove("loading");
+  dom.floatingInput.classList.remove("loading");
   debounceTimer = setTimeout(() => {
-    const cleanCity = floatingInput.value.replace(/[^a-zA-Z\s]/g, "").trim();
-    if (cleanCity) {
-      floatingInput.classList.add("loading");
-      checkweather(`city=${cleanCity}`).finally(() => {
-        floatingInput.classList.remove("loading");
-      });
-
+    const city = dom.floatingInput.value.replace(/[^a-zA-Z\s]/g, "").trim();
+    if (city) {
+      dom.floatingInput.classList.add("loading");
+      checkweather(`city=${city}`).finally(() =>
+        dom.floatingInput.classList.remove("loading"),
+      );
     }
   }, 400);
 });
@@ -408,15 +425,12 @@ floatingInput.addEventListener("input", () => {
 function syncMobileView() {
   if (!lastWeatherData) return;
 
-  const mobileToday = document.querySelector(".mobile-today");
-  const mobileCard = document.getElementById("mobile-hourly-card");
-  const panel = document.getElementById("hourly-panel");
   const isMobile = window.innerWidth <= 480;
 
   if (isMobile) {
-    mobileToday.style.display = "flex";
-    mobileCard.classList.add("visible");
-    panel.classList.remove("open");
+    dom.mobileToday.style.display = "flex";
+    dom.mobileHourlyCard.classList.add("visible");
+    dom.hourlyPanel.classList.remove("open");
 
     const condition = lastWeatherData.weather[0].main;
     const temp = lastWeatherData.main.temp;
@@ -424,35 +438,32 @@ function syncMobileView() {
     const wind = lastWeatherData.wind.speed;
     const feelsLike = Math.round(lastWeatherData.main.feels_like);
     const tip = getTip(condition, temp, humidity, wind);
-
-    const unitLabel = isCelsius ? "°c" : "°f";
+    const unit = isCelsius ? "°c" : "°f";
     const displayTemp = isCelsius
       ? currentTempC
       : Math.round((currentTempC * 9) / 5 + 32);
 
-    const mTemp = document.querySelector(".m-temp");
-    mTemp.innerHTML = displayTemp + `<span class="unit">${unitLabel}</span>`;
-    mTemp.onclick = toggleTemp;
-
-    document.querySelector(".m-city").innerHTML = lastWeatherData.name;
-    document.querySelector(".m-feels").innerHTML =
-      "Feels like " + feelsLike + unitLabel;
-    document.querySelector(".m-condition").innerHTML = condition;
-    document.querySelector(".m-humidity").innerHTML =
-      `<i class="bx bx-air"></i> ${humidity}% Humidity · ${getHumidityFeel(humidity)}`;
-    document.querySelector(".m-wind").innerHTML =
-      `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${getWindFeel(wind)}`;
-    document.querySelector(".m-tip").innerHTML = tip;
+    dom.mTemp.innerHTML = displayTemp + `<span class="unit">${unit}</span>`;
+    dom.mCity.textContent = lastWeatherData.name;
+    dom.mFeels.textContent = "Feels like " + feelsLike + unit;
+    dom.mCondition.textContent = condition;
+    dom.mHumidity.innerHTML = `<i class="bx bx-air"></i> ${humidity}% Humidity · ${getHumidityFeel(humidity)}`;
+    dom.mWind.innerHTML = `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${getWindFeel(wind)}`;
+    dom.mTip.textContent = tip;
   } else {
-    mobileToday.style.display = "none";
-    mobileCard.classList.remove("visible");
-    if (document.getElementById("hourly-strip").children.length > 0) {
-      panel.classList.add("open");
-    }
+    dom.mobileToday.style.display = "none";
+    dom.mobileHourlyCard.classList.remove("visible");
+    if (dom.hourlyStrip.children.length > 0)
+      dom.hourlyPanel.classList.add("open");
   }
 }
 
-window.addEventListener("resize", syncMobileView);
+// throttle resize — runs at most once per 150ms instead of hundreds of times
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(syncMobileView, 150);
+});
 
 window.addEventListener("orientationchange", () => {
   setTimeout(syncMobileView, 150);

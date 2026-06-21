@@ -55,6 +55,7 @@ body.mist {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  contain: strict;
 }
 
 .particle {
@@ -62,6 +63,7 @@ body.mist {
   top: -20px;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  will-change: transform;
 }
 .raindrop {
   width: 2px;
