@@ -85,9 +85,10 @@ async function checkweather(cityQuery) {
       "Feels like " + feelsLike + "°c";
     document.querySelector(".condition").innerHTML = condition;
     document.querySelector(".humidity").innerHTML = humidity + "%";
-    document.querySelector(".humidity-feel").innerHTML =
-      getHumidityFeel(humidity);
+    document.querySelector(".humidity-label").innerHTML = "Humidity";
+    document.querySelector(".humidity-feel").innerHTML = getHumidityFeel(humidity);
     document.querySelector(".wind").innerHTML = wind + " km/h";
+    document.querySelector(".wind-label").innerHTML = "Wind";
     document.querySelector(".wind-feel").innerHTML = getWindFeel(wind);
     document.querySelector(".tip").innerHTML = tip;
 
@@ -102,9 +103,9 @@ async function checkweather(cityQuery) {
         "Feels like " + feelsLike + "°c";
       document.querySelector(".m-condition").innerHTML = condition;
       document.querySelector(".m-humidity").innerHTML =
-        `<i class="bx bx-air"></i> ${humidity}% · ${getHumidityFeel(humidity)}`;
+        `<i class="bx bx-air"></i> ${humidity}% Humidity · ${getHumidityFeel(humidity)}`;
       document.querySelector(".m-wind").innerHTML =
-        `<i class="bx bx-wind"></i> ${wind} km/h · ${getWindFeel(wind)}`;
+        `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${getWindFeel(wind)}`;
       document.querySelector(".m-tip").innerHTML = tip;
     }
 
@@ -399,6 +400,7 @@ floatingInput.addEventListener("input", () => {
       checkweather(`city=${cleanCity}`).finally(() => {
         floatingInput.classList.remove("loading");
       });
+
     }
   }, 400);
 });
@@ -437,9 +439,9 @@ function syncMobileView() {
       "Feels like " + feelsLike + unitLabel;
     document.querySelector(".m-condition").innerHTML = condition;
     document.querySelector(".m-humidity").innerHTML =
-      `<i class="bx bx-air"></i> ${humidity}% · ${getHumidityFeel(humidity)}`;
+      `<i class="bx bx-air"></i> ${humidity}% Humidity · ${getHumidityFeel(humidity)}`;
     document.querySelector(".m-wind").innerHTML =
-      `<i class="bx bx-wind"></i> ${wind} km/h · ${getWindFeel(wind)}`;
+      `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${getWindFeel(wind)}`;
     document.querySelector(".m-tip").innerHTML = tip;
   } else {
     mobileToday.style.display = "none";
