@@ -32,10 +32,19 @@
         <span class="m-wind"></span>
       </div>
       <p class="m-tip"></p>
+
+      <!-- mobile hourly card: sits between weather info and forecast -->
+      <div class="mobile-hourly-card" id="mobile-hourly-card">
+        <div class="hourly-label">
+          <i class="bx bx-time-five"></i> Next 24 hours
+        </div>
+        <div class="hourly-strip" id="mobile-hourly-strip"></div>
+      </div>
     </div>
 
     <!-- wrapper holds main card + hourly panel together -->
     <div class="card-stack">
+
       <div class="card">
         <div class="search">
           <input type="text" placeholder="Enter city name" spellcheck="false" />
@@ -78,6 +87,7 @@
         </div>
         <div class="hourly-strip" id="hourly-strip"></div>
       </div>
+
     </div>
 
     <script src="app.js"></script>

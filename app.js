@@ -169,13 +169,37 @@ async function fetchForecast(cityQuery) {
 }
 
 function renderHourly(slots) {
-  if (window.innerWidth <= 480) return;
-
   const panel = document.getElementById("hourly-panel");
   const strip = document.getElementById("hourly-strip");
-  strip.innerHTML = "";
+  const mobileCard = document.getElementById("mobile-hourly-card");
+  const mobileStrip = document.getElementById("mobile-hourly-strip");
 
-  // "Now" column — use live current weather, not forecast
+  // build columns once, clone into both strips
+  const cols = buildHourlyCols(slots);
+
+  // desktop strip
+  strip.innerHTML = "";
+  cols.forEach((col) => strip.appendChild(col.cloneNode(true)));
+
+  // mobile strip
+  mobileStrip.innerHTML = "";
+  cols.forEach((col) => mobileStrip.appendChild(col.cloneNode(true)));
+
+  // show desktop panel
+  if (window.innerWidth > 480) {
+    panel.classList.add("open");
+  }
+
+  // show mobile card
+  if (window.innerWidth <= 480) {
+    mobileCard.classList.add("visible");
+  }
+}
+
+function buildHourlyCols(slots) {
+  const cols = [];
+
+  // "Now" column — use live current weather
   const nowCol = document.createElement("div");
   nowCol.classList.add("hour-col");
   const nowCondition = lastWeatherData.weather[0].main;
@@ -184,9 +208,9 @@ function renderHourly(slots) {
     <i class="${getIcon(nowCondition)}"></i>
     <span class="hour-temp" data-tempc="${currentTempC}">${isCelsius ? currentTempC + "°c" : Math.round((currentTempC * 9) / 5 + 32) + "°f"}</span>
   `;
-  strip.appendChild(nowCol);
+  cols.push(nowCol);
 
-  // remaining 7 slots from forecast (skip index 0, it overlaps with "now")
+  // next 7 slots from forecast
   slots.slice(1, 8).forEach((item) => {
     const date = new Date(item.dt * 1000);
     const condition = item.weather[0].main;
@@ -195,7 +219,6 @@ function renderHourly(slots) {
       hour: "numeric",
       hour12: true,
     });
-
     const col = document.createElement("div");
     col.classList.add("hour-col");
     col.innerHTML = `
@@ -203,10 +226,10 @@ function renderHourly(slots) {
       <i class="${getIcon(condition)}"></i>
       <span class="hour-temp" data-tempc="${temp}">${isCelsius ? temp + "°c" : Math.round((temp * 9) / 5 + 32) + "°f"}</span>
     `;
-    strip.appendChild(col);
+    cols.push(col);
   });
 
-  panel.classList.add("open");
+  return cols;
 }
 
 function setBackground(condition) {
@@ -347,10 +370,14 @@ function syncMobileView() {
   if (!lastWeatherData) return;
 
   const mobileToday = document.querySelector(".mobile-today");
+  const mobileCard = document.getElementById("mobile-hourly-card");
+  const panel = document.getElementById("hourly-panel");
   const isMobile = window.innerWidth <= 480;
 
   if (isMobile) {
     mobileToday.style.display = "flex";
+    mobileCard.classList.add("visible");
+    panel.classList.remove("open");
 
     const condition = lastWeatherData.weather[0].main;
     const temp = lastWeatherData.main.temp;
@@ -377,12 +404,12 @@ function syncMobileView() {
     document.querySelector(".m-wind").innerHTML =
       `<i class="bx bx-wind"></i> ${wind} km/h Wind`;
     document.querySelector(".m-tip").innerHTML = tip;
-
-    // hide hourly panel on mobile
-    const panel = document.getElementById("hourly-panel");
-    if (panel) panel.classList.remove("open");
   } else {
     mobileToday.style.display = "none";
+    mobileCard.classList.remove("visible");
+    if (document.getElementById("hourly-strip").children.length > 0) {
+      panel.classList.add("open");
+    }
   }
 }
 

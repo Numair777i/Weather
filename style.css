@@ -591,10 +591,11 @@ body.mist {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 60px 25px 10px;
+    padding: 50px 16px 0;
     color: #fff;
     width: 100%;
     flex: 1;
+    gap: 0;
   }
   .mobile-today .m-city {
     font-size: 28px;
@@ -644,9 +645,59 @@ body.mist {
     width: 100%;
   }
 
+  /* mobile hourly card — same glass as main card, sits below tip with a gap */
+  .mobile-hourly-card {
+    display: none;
+    width: 100%;
+    margin-top: 16px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    border-radius: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    padding: 16px 16px 18px;
+    overflow: hidden;
+  }
+  .mobile-hourly-card.visible {
+    display: block;
+  }
+  /* on mobile the strip scrolls left-right */
+  .mobile-hourly-card .hourly-strip {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 0;
+    width: 100%;
+  }
+  .mobile-hourly-card .hourly-strip::-webkit-scrollbar {
+    display: none;
+  }
+  /* fixed width columns so they don't stretch — scroll instead */
+  .mobile-hourly-card .hour-col {
+    flex: 0 0 72px;
+    min-width: 72px;
+    padding: 0 6px;
+  }
+  .mobile-hourly-card .hourly-label {
+    margin-bottom: 12px;
+  }
+
+  /* gap between hourly card and main forecast card below */
   .card-stack {
     width: 100%;
     margin: 0;
+    margin-top: 16px;
   }
   .card {
     border-radius: 30px 30px 0 0;
@@ -683,6 +734,8 @@ body.mist {
     font-size: 14px;
     height: 45px;
   }
+
+  /* hide desktop hourly panel on mobile */
   .hourly-panel {
     display: none !important;
   }
