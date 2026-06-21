@@ -8,6 +8,10 @@ const FILES = [
   "./app.js",
   "./boxicons/css/boxicons.min.css",
   "./boxicons/fonts/boxicons.woff2",
+  "./fonts/inter-latin-200-normal.woff2",
+  "./fonts/inter-latin-300-normal.woff2",
+  "./fonts/inter-latin-400-normal.woff2",
+  "./fonts/inter-latin-500-normal.woff2",
 ];
 
 // install — cache all files
