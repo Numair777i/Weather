@@ -286,24 +286,25 @@ body.mist {
   display: flex;
   gap: 0;
   overflow-x: auto;
-  scrollbar-width: none; /* hide scrollbar firefox */
-  -ms-overflow-style: none; /* hide scrollbar IE */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   padding-bottom: 4px;
+  width: 100%;
 }
 .hourly-strip::-webkit-scrollbar {
   display: none;
 }
 
-/* each hour column */
+/* each hour column — flex:1 spreads evenly across full width */
 .hour-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  flex: 1;
   min-width: 72px;
-  padding: 0 8px;
+  padding: 0 4px;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
 }
 .hour-col:last-child {
   border-right: none;
@@ -314,9 +315,60 @@ body.mist {
   opacity: 0.7;
   white-space: nowrap;
 }
-.hour-col i {
-  font-size: 22px;
+
+/* colored weather icons */
+.hour-col .bx-sun {
+  color: #f9c74f;
+  font-size: 24px;
 }
+.hour-col .bx-cloud {
+  color: #e0e0e0;
+  font-size: 24px;
+}
+.hour-col .bx-cloud-rain {
+  color: #74b9ff;
+  font-size: 24px;
+}
+.hour-col .bx-cloud-drizzle {
+  color: #a0c4ff;
+  font-size: 24px;
+}
+.hour-col .bx-cloud-lightning {
+  color: #f4d03f;
+  font-size: 24px;
+}
+.hour-col .bx-snow {
+  color: #caf0f8;
+  font-size: 24px;
+}
+.hour-col .bx-water {
+  color: #b0c4de;
+  font-size: 24px;
+}
+
+/* also color icons in forecast panel and today section */
+.forecast-day .bx-sun {
+  color: #f9c74f;
+}
+.forecast-day .bx-cloud {
+  color: #e0e0e0;
+}
+.forecast-day .bx-cloud-rain {
+  color: #74b9ff;
+}
+.forecast-day .bx-cloud-drizzle {
+  color: #a0c4ff;
+}
+.forecast-day .bx-cloud-lightning {
+  color: #f4d03f;
+}
+.forecast-day .bx-snow {
+  color: #caf0f8;
+}
+.forecast-day .bx-water {
+  color: #b0c4de;
+}
+
 .hour-temp {
   font-size: 15px;
   font-weight: 500;
