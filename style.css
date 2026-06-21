@@ -23,8 +23,9 @@ body {
   transition: background 1s ease;
 }
 
+/* CHANGED: duller, less saturated clear sky gradient */
 body.clear {
-  background: linear-gradient(to bottom, #4a9fd4, #89cff0);
+  background: linear-gradient(to bottom, #3a7fa8, #6aadcc);
 }
 body.clouds {
   background: linear-gradient(to bottom, #bdc3c7, #2c3e50);
@@ -207,7 +208,6 @@ body.mist {
   width: 90%;
   max-width: 900px;
   margin: 0 auto;
-  /* extra bottom padding so hourly panel has room to slide into */
   padding-bottom: 0;
 }
 
@@ -232,6 +232,20 @@ body.mist {
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* CHANGED: dull down card glass on clear weather */
+body.clear .card,
+body.clear .hourly-panel,
+body.clear .mobile-hourly-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
 .card {
   padding: 30px 35px;
   position: relative;
@@ -240,13 +254,12 @@ body.mist {
 
 /* ---- hourly panel: keyboard-phone slide effect ---- */
 .hourly-panel {
-  /* starts hidden just behind/below the main card */
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  margin-top: -20px; /* tucks under the main card slightly */
+  margin-top: -20px;
   border-radius: 0 0 30px 30px;
-  border-top: none; /* seamless join with card above */
+  border-top: none;
   padding: 0 35px;
   transition:
     max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1),
@@ -257,13 +270,12 @@ body.mist {
   position: relative;
 }
 
-/* when .open is added — slides down like keyboard phone */
 .hourly-panel.open {
   max-height: 160px;
   opacity: 1;
   padding: 18px 35px 25px;
   margin-top: 8px;
-  border-radius: 30px; /* full radius once slid out */
+  border-radius: 30px;
   border-top: 1px solid rgba(255, 255, 255, 0.5);
 }
 
@@ -281,7 +293,6 @@ body.mist {
   font-size: 14px;
 }
 
-/* scrollable horizontal strip */
 .hourly-strip {
   display: flex;
   gap: 0;
@@ -295,7 +306,6 @@ body.mist {
   display: none;
 }
 
-/* each hour column — flex:1 spreads evenly across full width */
 .hour-col {
   display: flex;
   flex-direction: column;
@@ -316,7 +326,6 @@ body.mist {
   white-space: nowrap;
 }
 
-/* colored weather icons */
 .hour-col .bx-sun {
   color: #f9c74f;
   font-size: 24px;
@@ -346,7 +355,6 @@ body.mist {
   font-size: 24px;
 }
 
-/* also color icons in forecast panel and today section */
 .forecast-day .bx-sun {
   color: #f9c74f;
 }
@@ -393,6 +401,15 @@ body.mist {
 .search input::placeholder {
   color: rgba(255, 255, 255, 0.6);
 }
+
+/* CHANGED: tone down search bar on clear sky so it doesn't glare */
+body.clear .search input {
+  background: rgba(255, 255, 255, 0.12);
+}
+body.clear .search input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .search input.loading {
   outline: 2px solid rgba(255, 255, 255, 0.5);
   animation: inputpulse 1s ease-in-out infinite;
@@ -495,6 +512,12 @@ body.mist {
   padding: 10px 15px;
   gap: 10px;
 }
+
+/* CHANGED: dull forecast day cards on clear */
+body.clear .forecast-day {
+  background: rgba(255, 255, 255, 0.07);
+}
+
 .forecast-day .day-name {
   font-size: 16px;
   width: 80px;
@@ -591,18 +614,19 @@ body.mist {
     min-height: 100vh;
   }
 
-  /* floating search pill fixed at bottom */
+  /* CHANGED: reduced width by 20% — narrower pill */
   .floating-search {
     display: block;
     position: fixed;
     bottom: calc(18px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
-    width: calc(100% - 120px);
-    max-width: 300px;
+    width: calc(100% - 160px);
+    max-width: 240px;
     z-index: 999;
   }
 
+  /* CHANGED: softer glass background so it doesn't glare on clear sky */
   .floating-search input {
     width: 100%;
     height: 44px;
@@ -612,29 +636,27 @@ body.mist {
     padding: 0 20px;
     font-size: 15px;
     color: #fff;
-    /* glossy liquid glass — tinted so text stays readable */
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.11) 0%,
-      rgba(200, 220, 255, 0.07) 50%,
-      rgba(255, 255, 255, 0.05) 100%
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(200, 220, 255, 0.04) 50%,
+      rgba(255, 255, 255, 0.03) 100%
     );
-    backdrop-filter: blur(28px) saturate(180%) brightness(1.1);
-    -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.1);
-    /* asymmetric border — bright top/left = light hitting glass */
-    border-top: 1px solid rgba(255, 255, 255, 0.65);
-    border-left: 1px solid rgba(255, 255, 255, 0.4);
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+    -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
-      0 6px 24px rgba(0, 0, 0, 0.22),
-      0 1px 6px rgba(0, 0, 0, 0.12),
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.5),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.06),
-      inset 0 0 20px rgba(255, 255, 255, 0.05);
+      0 6px 24px rgba(0, 0, 0, 0.18),
+      0 1px 6px rgba(0, 0, 0, 0.1),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+      inset 0 0 20px rgba(255, 255, 255, 0.03);
   }
   .floating-search input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.55);
   }
   .floating-search input.loading {
     outline: 2px solid rgba(255, 255, 255, 0.5);
@@ -768,7 +790,6 @@ body.mist {
     margin-bottom: 12px;
   }
 
-  /* gap between hourly card and forecast card */
   .card-stack {
     width: 100%;
     margin: 0;
@@ -804,13 +825,17 @@ body.mist {
     font-size: 12px;
   }
 
-  /* hide desktop hourly panel on mobile */
   .hourly-panel {
     display: none !important;
   }
 }
 
 @media (max-width: 375px) {
+  /* CHANGED: also reduce floating search on very small screens */
+  .floating-search {
+    width: calc(100% - 180px);
+    max-width: 200px;
+  }
   .card {
     padding: 15px 10px;
   }
