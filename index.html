@@ -20,12 +20,27 @@
   </head>
   <body>
     <div id="bg-animation"></div>
+
+    <!-- mobile only: today info shown above card -->
+    <div class="mobile-today">
+      <h2 class="m-city"></h2>
+      <h1 class="m-temp"></h1>
+      <p class="m-feels"></p>
+      <p class="m-condition"></p>
+      <div class="m-details">
+        <span class="m-humidity"></span>
+        <span class="m-wind"></span>
+      </div>
+      <p class="m-tip"></p>
+    </div>
+
     <div class="card">
       <div class="search">
         <input type="text" placeholder="Enter city name" spellcheck="false" />
         <p class="error"></p>
       </div>
       <div class="main">
+        <!-- hidden on mobile -->
         <div class="today">
           <h2 class="city"></h2>
           <h1 class="temp"></h1>

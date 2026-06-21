@@ -72,6 +72,23 @@ async function checkweather(cityQuery) {
     document.querySelector(".tip").innerHTML = tip;
     setBackground(condition);
     fetchForecast(cityQuery);
+
+    // update mobile view
+    if (window.innerWidth <= 480) {
+      document.querySelector(".mobile-today").style.display = "flex";
+      const mTemp = document.querySelector(".m-temp");
+      mTemp.innerHTML = currentTempC + `<span class="unit">°c</span>`;
+      mTemp.onclick = toggleMobileTemp;
+      document.querySelector(".m-city").innerHTML = data.name;
+      document.querySelector(".m-feels").innerHTML =
+        "Feels like " + Math.round(data.main.feels_like) + "°c";
+      document.querySelector(".m-condition").innerHTML = data.weather[0].main;
+      document.querySelector(".m-humidity").innerHTML =
+        "💧 " + data.main.humidity + "%";
+      document.querySelector(".m-wind").innerHTML =
+        "💨 " + data.wind.speed + " km/h";
+      document.querySelector(".m-tip").innerHTML = tip;
+    }
   } catch (err) {
     showError("Something went wrong. Try again.");
   }
@@ -266,3 +283,18 @@ searchBox.addEventListener("input", () => {
     }
   }, 600);
 });
+
+// toggle temp on mobile view
+function toggleMobileTemp() {
+  isCelsius = !isCelsius;
+  const mTemp = document.querySelector(".m-temp");
+  mTemp.innerHTML = isCelsius
+    ? currentTempC + `<span class="unit">°c</span>`
+    : Math.round((currentTempC * 9) / 5 + 32) + `<span class="unit">°f</span>`;
+  mTemp.onclick = toggleMobileTemp;
+
+  document.querySelectorAll(".day-temp").forEach((el) => {
+    const c = parseInt(el.dataset.tempc);
+    el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
+  });
+}
