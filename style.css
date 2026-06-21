@@ -27,7 +27,7 @@ body {
 
 /* weather backgrounds */
 body.clear {
-  background: linear-gradient(to bottom, #f7b733, #fc4a1a);
+  background: linear-gradient(to bottom, #2980b9, #6dd5fa);
 }
 body.clouds {
   background: linear-gradient(to bottom, #bdc3c7, #2c3e50);
