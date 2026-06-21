@@ -298,3 +298,13 @@ searchBox.addEventListener("input", () => {
     }
   }, 400);
 });
+
+// re-show mobile view when rotating back to portrait
+window.addEventListener("resize", () => {
+  const mobileToday = document.querySelector(".mobile-today");
+  if (window.innerWidth <= 480) {
+    mobileToday.style.display = "flex";
+  } else {
+    mobileToday.style.display = "none";
+  }
+});

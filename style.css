@@ -484,8 +484,8 @@ body.mist {
     max-width: 100%;
   }
   .mobile-today .m-temp {
-    font-size: 90px;
-    font-weight: 300;
+    font-size: 110px;
+    font-weight: 200;
     line-height: 1;
     cursor: pointer;
     width: fit-content;
@@ -511,6 +511,11 @@ body.mist {
     margin-top: 12px;
     font-size: 13px;
     opacity: 0.85;
+    /* same glass pill as desktop */
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 12px;
+    width: 100%;
   }
 
   /* card sticks to bottom edge to edge */
@@ -587,6 +592,6 @@ body.mist {
     font-size: 20px;
   }
   .card {
-    border-radius: 20px 20px 0 0;
+    border-radius: 20px 20px 20px 20px;
   }
 }
