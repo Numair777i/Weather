@@ -169,30 +169,32 @@ async function fetchForecast(cityQuery) {
 }
 
 function renderHourly(slots) {
-  // only show on non-mobile
   if (window.innerWidth <= 480) return;
 
   const panel = document.getElementById("hourly-panel");
   const strip = document.getElementById("hourly-strip");
   strip.innerHTML = "";
 
-  const now = new Date();
+  // "Now" column — use live current weather, not forecast
+  const nowCol = document.createElement("div");
+  nowCol.classList.add("hour-col");
+  const nowCondition = lastWeatherData.weather[0].main;
+  nowCol.innerHTML = `
+    <span class="hour-label">Now</span>
+    <i class="${getIcon(nowCondition)}"></i>
+    <span class="hour-temp" data-tempc="${currentTempC}">${isCelsius ? currentTempC + "°c" : Math.round((currentTempC * 9) / 5 + 32) + "°f"}</span>
+  `;
+  strip.appendChild(nowCol);
 
-  slots.forEach((item, i) => {
+  // remaining 7 slots from forecast (skip index 0, it overlaps with "now")
+  slots.slice(1, 8).forEach((item) => {
     const date = new Date(item.dt * 1000);
     const condition = item.weather[0].main;
     const temp = Math.round(item.main.temp);
-
-    // label: "Now" for first slot, otherwise time like "3 PM"
-    let label;
-    if (i === 0) {
-      label = "Now";
-    } else {
-      label = date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        hour12: true,
-      });
-    }
+    const label = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      hour12: true,
+    });
 
     const col = document.createElement("div");
     col.classList.add("hour-col");
@@ -204,7 +206,6 @@ function renderHourly(slots) {
     strip.appendChild(col);
   });
 
-  // slide it open
   panel.classList.add("open");
 }
 
