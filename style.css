@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
+/* reset */
 * {
   margin: 0;
   padding: 0;
@@ -7,6 +8,7 @@
   box-sizing: border-box;
 }
 
+/* base - dark fallback before weather loads */
 html,
 body {
   min-height: 100vh;
@@ -46,7 +48,7 @@ body.mist {
   background: linear-gradient(to bottom, #8e9eab, #b0bec5);
 }
 
-/* animated bg container */
+/* fixed animated bg layer behind everything */
 #bg-animation {
   position: fixed;
   top: 0;
@@ -58,7 +60,7 @@ body.mist {
   overflow: hidden;
 }
 
-/* particles */
+/* --- particles --- */
 .particle {
   position: absolute;
   top: -20px;
@@ -85,6 +87,7 @@ body.mist {
   opacity: 0.8;
   animation-name: snowfall;
 }
+
 .cloud {
   width: 220px;
   height: 60px;
@@ -95,6 +98,7 @@ body.mist {
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
+
 .sun {
   width: 120px;
   height: 120px;
@@ -107,6 +111,7 @@ body.mist {
   box-shadow: 0 0 60px rgba(255, 255, 255, 0.4);
   animation: pulse 3s ease-in-out infinite;
 }
+
 .lightning {
   position: absolute;
   width: 3px;
@@ -115,6 +120,7 @@ body.mist {
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
+
 .mistlayer {
   position: absolute;
   width: 100%;
@@ -126,6 +132,7 @@ body.mist {
   animation-iteration-count: infinite;
 }
 
+/* --- animations --- */
 @keyframes fall {
   0% {
     top: -20px;
@@ -185,13 +192,31 @@ body.mist {
     left: 100%;
   }
 }
+@keyframes inputpulse {
+  0%,
+  100% {
+    outline-color: rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    outline-color: rgba(255, 255, 255, 0.7);
+  }
+}
+@keyframes successpulse {
+  0% {
+    outline-color: rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    outline-color: rgba(255, 255, 255, 0);
+  }
+}
 
-/* card - liquid glass */
+/* --- card: liquid glass effect --- */
 .card {
   position: relative;
   z-index: 1;
   width: 90%;
   max-width: 900px;
+  /* subtle gradient for glass feel */
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.12) 0%,
@@ -203,6 +228,7 @@ body.mist {
   margin: 0 auto;
   padding: 30px 35px;
   border-radius: 30px;
+  /* asymmetric border — brighter top/left = light hitting glass */
   border-top: 1px solid rgba(255, 255, 255, 0.5);
   border-left: 1px solid rgba(255, 255, 255, 0.3);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -212,7 +238,7 @@ body.mist {
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* search bar */
+/* --- search bar --- */
 .search {
   width: 100%;
   margin-bottom: 30px;
@@ -232,22 +258,19 @@ body.mist {
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* search loading pulse */
+/* pulse while waiting for result */
 .search input.loading {
   outline: 2px solid rgba(255, 255, 255, 0.5);
   animation: inputpulse 1s ease-in-out infinite;
 }
-@keyframes inputpulse {
-  0%,
-  100% {
-    outline-color: rgba(255, 255, 255, 0.2);
-  }
-  50% {
-    outline-color: rgba(255, 255, 255, 0.7);
-  }
+
+/* green glow flash on successful search */
+.search input.success {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  animation: successpulse 0.6s ease-out forwards;
 }
 
-/* error */
+/* error message below search */
 .error {
   display: none;
   color: rgba(255, 100, 100, 0.9);
@@ -256,12 +279,13 @@ body.mist {
   margin-left: 5px;
 }
 
-/* layout */
+/* --- main layout: today left, forecast right --- */
 .main {
   display: flex;
   gap: 30px;
   align-items: flex-start;
 }
+
 .today {
   flex: 1;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
@@ -271,14 +295,19 @@ body.mist {
   flex-direction: column;
 }
 
-/* today weather */
+/* city name — clamp scales smoothly, ellipsis handles long names */
 .today .city {
-  font-size: 32px;
+  font-size: clamp(22px, 4vw, 40px);
   font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* big temp — clamp scales between 60-100px automatically */
 .today .temp {
   cursor: pointer;
-  font-size: 80px;
+  font-size: clamp(60px, 10vw, 100px);
   font-weight: 300;
   line-height: 1;
   margin: 10px 0;
@@ -289,13 +318,19 @@ body.mist {
 .today .temp:hover {
   opacity: 0.8;
 }
+
+.today .feels {
+  font-size: 15px;
+  opacity: 0.6;
+  margin-bottom: 5px;
+}
 .today .condition {
   font-size: 20px;
   opacity: 0.8;
   margin-bottom: 30px;
 }
 
-/* humidity and wind */
+/* wind and humidity pushed to bottom */
 .details {
   display: flex;
   gap: 20px;
@@ -314,7 +349,7 @@ body.mist {
   font-size: 20px;
 }
 
-/* smart tip */
+/* smart weather tip */
 .tip {
   margin-top: 15px;
   font-size: 15px;
@@ -324,7 +359,7 @@ body.mist {
   border-radius: 12px;
 }
 
-/* forecast */
+/* --- forecast: 5 day list on right --- */
 .forecast {
   flex: 1;
   display: flex;
@@ -358,18 +393,55 @@ body.mist {
   text-align: right;
 }
 
-/* tablet */
+/* °c/°f toggle pill */
+.unit {
+  font-size: 35px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 5px 14px;
+  margin-left: 8px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* mobile today section — hidden on desktop */
+.mobile-today {
+  display: none;
+}
+
+/* --- responsive breakpoints --- */
+
+/* large screens 1200px+ */
+@media (min-width: 1200px) {
+  .card {
+    max-width: 1000px;
+  }
+}
+
+/* iPad/tablet 768-1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .card {
+    width: 90%;
+    padding: 25px 30px;
+    margin: 60px auto;
+  }
+  .forecast-day .day-name {
+    width: 60px;
+    font-size: 15px;
+  }
+  .forecast-day .day-condition {
+    width: 70px;
+    font-size: 13px;
+  }
+}
+
+/* tablet below 768px */
 @media (max-width: 768px) {
   .card {
     width: 95%;
     padding: 20px 25px;
     margin: 40px auto;
-  }
-  .today .temp {
-    font-size: 60px;
-  }
-  .today .city {
-    font-size: 26px;
   }
   .forecast-day .day-name {
     width: 50px;
@@ -381,12 +453,7 @@ body.mist {
   }
 }
 
-/* mobile today - hidden on desktop */
-.mobile-today {
-  display: none;
-}
-
-/* mobile */
+/* mobile 480px and below */
 @media (max-width: 480px) {
   body {
     align-items: flex-end;
@@ -396,11 +463,13 @@ body.mist {
     min-height: 100vh;
   }
 
-  /* today info floating above card */
+  /* weather info floats above card */
   .mobile-today {
     display: flex;
     flex-direction: column;
-    padding: 60px 25px 30px;
+    align-items: center;
+    text-align: center;
+    padding: 60px 25px 10px;
     color: #fff;
     width: 100%;
     flex: 1;
@@ -409,8 +478,11 @@ body.mist {
   .mobile-today .m-city {
     font-size: 28px;
     font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
-
   .mobile-today .m-temp {
     font-size: 90px;
     font-weight: 300;
@@ -418,19 +490,16 @@ body.mist {
     cursor: pointer;
     width: fit-content;
   }
-
   .mobile-today .m-feels {
     font-size: 14px;
     opacity: 0.7;
     margin-top: 5px;
   }
-
   .mobile-today .m-condition {
     font-size: 18px;
     opacity: 0.8;
     margin-top: 4px;
   }
-
   .mobile-today .m-details {
     display: flex;
     gap: 20px;
@@ -438,14 +507,13 @@ body.mist {
     opacity: 0.8;
     font-size: 14px;
   }
-
   .mobile-today .m-tip {
     margin-top: 12px;
     font-size: 13px;
     opacity: 0.85;
   }
 
-  /* card sticks to bottom, full width */
+  /* card sticks to bottom edge to edge */
   .card {
     width: 100%;
     border-radius: 30px 30px 0 0;
@@ -455,7 +523,7 @@ body.mist {
     z-index: 2;
   }
 
-  /* hide desktop today section */
+  /* hide desktop today section on mobile */
   .today {
     display: none;
   }
@@ -464,60 +532,39 @@ body.mist {
     flex-direction: column;
     gap: 10px;
   }
-
   .forecast {
     flex-direction: column;
     gap: 10px;
     width: 100%;
   }
 
+  /* bigger tap targets for fingers */
   .forecast-day {
-    padding: 8px 12px;
+    padding: 12px 15px;
+    min-height: 50px;
   }
-
   .forecast-day .day-name {
     width: 45px;
     font-size: 14px;
   }
-
   .forecast-day .day-condition {
     width: 70px;
     font-size: 12px;
   }
 
+  .search {
+    margin-bottom: 15px;
+  }
   .search input {
     font-size: 14px;
     height: 45px;
   }
-
-  .search {
-    margin-bottom: 15px;
-  }
 }
 
-/* large screens */
-@media (min-width: 1200px) {
-  .card {
-    max-width: 1000px;
-  }
-  .today .temp {
-    font-size: 100px;
-  }
-  .today .city {
-    font-size: 40px;
-  }
-}
-
-/* small phones */
+/* small phones 375px */
 @media (max-width: 375px) {
   .card {
     padding: 15px 10px;
-  }
-  .today .temp {
-    font-size: 60px;
-  }
-  .today .city {
-    font-size: 22px;
   }
   .forecast-day {
     padding: 6px 10px;
@@ -528,13 +575,18 @@ body.mist {
   }
 }
 
-.unit {
-  font-size: 35px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  padding: 5px 14px;
-  margin-left: 8px;
-  vertical-align: middle;
-  cursor: pointer;
+/* landscape mode on phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mobile-today {
+    padding: 20px 25px 10px;
+  }
+  .mobile-today .m-temp {
+    font-size: 50px;
+  }
+  .mobile-today .m-city {
+    font-size: 20px;
+  }
+  .card {
+    border-radius: 20px 20px 0 0;
+  }
 }

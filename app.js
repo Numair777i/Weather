@@ -1,18 +1,17 @@
-const apiKey = "4c157f34b0041826b5342b3a93a2f38c";
 const apiUrl = "/api/weather?";
 const forecastUrl = "/api/forecast?";
 const searchBox = document.querySelector(".search input");
 const bgAnimation = document.getElementById("bg-animation");
 const tempEl = document.querySelector(".temp");
 
-// tracks current temp and unit
+// tracks current temp and unit globally
 let currentTempC = 0;
 let isCelsius = true;
 
-// click temp to toggle C/F
+// click big temp to toggle C/F
 tempEl.onclick = toggleTemp;
 
-// boxicon for each weather condition
+// map OWM condition to boxicon class
 function getIcon(condition) {
   const icons = {
     Clear: "bx bx-sun",
@@ -29,7 +28,7 @@ function getIcon(condition) {
   return icons[condition] || "bx bx-cloud";
 }
 
-// fetch current weather
+// fetch and display current weather
 async function checkweather(cityQuery) {
   try {
     const res = await fetch(apiUrl + cityQuery);
@@ -42,22 +41,22 @@ async function checkweather(cityQuery) {
 
     clearError();
 
-    // update today's weather
-    document.querySelector(".city").innerHTML = data.name;
+    // flash white glow on search bar — confirms something happened
+    searchBox.classList.add("success");
+    setTimeout(() => searchBox.classList.remove("success"), 600);
+
+    // store temp globally so toggle works anytime
     currentTempC = Math.round(data.main.temp);
     isCelsius = true;
-    tempEl.innerHTML = currentTempC + `<span class="unit">°c</span>`;
-    document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
-    document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
-    document.querySelector(".condition").innerHTML = data.weather[0].main;
 
-    // smart tip based on weather
     const condition = data.weather[0].main;
     const temp = data.main.temp;
     const humidity = data.main.humidity;
     const wind = data.wind.speed;
-    let tip = "";
+    const feelsLike = Math.round(data.main.feels_like);
 
+    // pick smart tip based on weather data
+    let tip = "";
     if (["Rain", "Drizzle", "Thunderstorm"].includes(condition))
       tip = "🌂 Carry an umbrella today";
     else if (condition === "Snow") tip = "🧤 Bundle up, it's snowing";
@@ -69,45 +68,60 @@ async function checkweather(cityQuery) {
     else if (wind >= 20) tip = "💨 Strong winds, hold onto your hat";
     else tip = "😊 Pleasant weather, enjoy your day";
 
+    // update desktop view
+    document.querySelector(".city").innerHTML = data.name;
+    tempEl.innerHTML = currentTempC + `<span class="unit">°c</span>`;
+    document.querySelector(".feels").innerHTML =
+      "Feels like " + feelsLike + "°c";
+    document.querySelector(".condition").innerHTML = condition;
+    document.querySelector(".humidity").innerHTML = humidity + "%";
+    document.querySelector(".wind").innerHTML = wind + " km/h";
     document.querySelector(".tip").innerHTML = tip;
-    setBackground(condition);
-    fetchForecast(cityQuery);
 
-    // update mobile view
+    // update mobile view if on small screen
     if (window.innerWidth <= 480) {
-      document.querySelector(".mobile-today").style.display = "flex";
+      const mobileToday = document.querySelector(".mobile-today");
+      mobileToday.style.display = "flex";
       const mTemp = document.querySelector(".m-temp");
       mTemp.innerHTML = currentTempC + `<span class="unit">°c</span>`;
-      mTemp.onclick = toggleMobileTemp;
+      mTemp.onclick = toggleTemp; // same toggle function, no duplicate
       document.querySelector(".m-city").innerHTML = data.name;
       document.querySelector(".m-feels").innerHTML =
-        "Feels like " + Math.round(data.main.feels_like) + "°c";
-      document.querySelector(".m-condition").innerHTML = data.weather[0].main;
-      document.querySelector(".m-humidity").innerHTML =
-        "💧 " + data.main.humidity + "%";
-      document.querySelector(".m-wind").innerHTML =
-        "💨 " + data.wind.speed + " km/h";
+        "Feels like " + feelsLike + "°c";
+      document.querySelector(".m-condition").innerHTML = condition;
+      document.querySelector(".m-humidity").innerHTML = "💧 " + humidity + "%";
+      document.querySelector(".m-wind").innerHTML = "💨 " + wind + " km/h";
       document.querySelector(".m-tip").innerHTML = tip;
     }
+
+    setBackground(condition);
+    fetchForecast(cityQuery);
   } catch (err) {
     showError("Something went wrong. Try again.");
   }
 }
 
-// toggle celsius / fahrenheit
+// single toggle function handles both desktop and mobile
 function toggleTemp() {
   isCelsius = !isCelsius;
-  tempEl.innerHTML = isCelsius
-    ? currentTempC + `<span class="unit">°c</span>`
-    : Math.round((currentTempC * 9) / 5 + 32) + `<span class="unit">°f</span>`;
+  const display = (c) =>
+    isCelsius
+      ? c + `<span class="unit">°c</span>`
+      : Math.round((c * 9) / 5 + 32) + `<span class="unit">°f</span>`;
 
+  // update both desktop and mobile temp
+  tempEl.innerHTML = display(currentTempC);
+  const mTemp = document.querySelector(".m-temp");
+  if (mTemp) mTemp.innerHTML = display(currentTempC);
+
+  // update all forecast day temps
   document.querySelectorAll(".day-temp").forEach((el) => {
     const c = parseInt(el.dataset.tempc);
     el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
   });
 }
 
-// show/hide error
+// show/hide error below search bar
 function showError(msg) {
   const el = document.querySelector(".error");
   el.innerHTML = msg;
@@ -119,12 +133,12 @@ function clearError() {
   el.style.display = "none";
 }
 
-// fetch 5 day forecast
+// fetch 5 day forecast and render
 async function fetchForecast(cityQuery) {
   const res = await fetch(forecastUrl + cityQuery);
   const data = await res.json();
 
-  // pick one reading per day around noon
+  // OWM sends every 3hrs — pick the reading closest to noon each day
   const daily = {};
   data.list.forEach((item) => {
     const date = new Date(item.dt * 1000);
@@ -153,7 +167,7 @@ async function fetchForecast(cityQuery) {
     });
 }
 
-// set animated background based on condition
+// change bg + animations based on weather condition
 function setBackground(condition) {
   document.body.className = "";
   bgAnimation.innerHTML = "";
@@ -199,7 +213,7 @@ function createClouds(count) {
     cloud.style.opacity = Math.random() * 0.4 + 0.4;
     cloud.style.transform = `scale(${Math.random() * 0.8 + 0.6})`;
 
-    // bumps to make clouds look realistic
+    // 3 circular bumps on top to look like a real cloud
     [
       { width: "80px", height: "80px", top: "-40px", left: "20px" },
       { width: "100px", height: "100px", top: "-55px", left: "60px" },
@@ -262,18 +276,19 @@ function createMist() {
   }
 }
 
-// on load clear search and show Delhi
+// on page load: clear search and load Delhi by default
 window.addEventListener("load", () => {
   searchBox.value = "";
   checkweather("city=Delhi");
 });
 
-// debounce search — waits 600ms after user stops typing
+// debounce: waits 600ms after user stops typing before searching
 let debounceTimer;
 searchBox.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   searchBox.classList.remove("loading");
   debounceTimer = setTimeout(() => {
+    // strip symbols, keep only letters and spaces
     const cleanCity = searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
     if (cleanCity) {
       searchBox.classList.add("loading");
@@ -281,20 +296,5 @@ searchBox.addEventListener("input", () => {
         searchBox.classList.remove("loading");
       });
     }
-  }, 600);
+  }, 400);
 });
-
-// toggle temp on mobile view
-function toggleMobileTemp() {
-  isCelsius = !isCelsius;
-  const mTemp = document.querySelector(".m-temp");
-  mTemp.innerHTML = isCelsius
-    ? currentTempC + `<span class="unit">°c</span>`
-    : Math.round((currentTempC * 9) / 5 + 32) + `<span class="unit">°f</span>`;
-  mTemp.onclick = toggleMobileTemp;
-
-  document.querySelectorAll(".day-temp").forEach((el) => {
-    const c = parseInt(el.dataset.tempc);
-    el.innerHTML = isCelsius ? c + "°c" : Math.round((c * 9) / 5 + 32) + "°f";
-  });
-}

@@ -21,7 +21,7 @@
   <body>
     <div id="bg-animation"></div>
 
-    <!-- mobile only: today info shown above card -->
+    <!-- mobile only: weather info shown above card -->
     <div class="mobile-today">
       <h2 class="m-city"></h2>
       <h1 class="m-temp"></h1>
@@ -40,10 +40,11 @@
         <p class="error"></p>
       </div>
       <div class="main">
-        <!-- hidden on mobile -->
+        <!-- desktop: today's weather on left -->
         <div class="today">
           <h2 class="city"></h2>
           <h1 class="temp"></h1>
+          <p class="feels"></p>
           <p class="condition"></p>
           <div class="details">
             <div class="col">
@@ -63,6 +64,8 @@
           </div>
           <p class="tip"></p>
         </div>
+
+        <!-- right: 5 day forecast -->
         <div class="forecast" id="forecast"></div>
       </div>
     </div>
