@@ -276,7 +276,7 @@ function setBackground(condition) {
     },
     Rain: () => {
       document.body.classList.add("rain");
-      createDrops(50, "raindrop");
+      createDrops(80, "raindrop");
     },
     Drizzle: () => {
       document.body.classList.add("drizzle");
