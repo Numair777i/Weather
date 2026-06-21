@@ -503,7 +503,7 @@ body.clear .search input::placeholder {
 .details {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 40px;
   position: absolute;
   right: 30px;
   top: 30px;
