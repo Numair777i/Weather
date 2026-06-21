@@ -6,6 +6,7 @@ const tempEl = document.querySelector(".temp");
 
 // tracks current temp and unit globally
 let currentTempC = 0;
+let lastWeatherData = null;
 let isCelsius = true;
 
 // click big temp to toggle C/F
@@ -40,6 +41,7 @@ async function checkweather(cityQuery) {
     }
 
     clearError();
+    lastWeatherData = data;
 
     // flash white glow on search bar — confirms something happened
     searchBox.classList.add("success");
@@ -308,15 +310,21 @@ searchBox.addEventListener("input", () => {
 // re-show mobile view when rotating back to portrait
 window.addEventListener("resize", () => {
   const mobileToday = document.querySelector(".mobile-today");
-  if (window.innerWidth <= 480) {
-    // if data exists, repopulate mobile view
-    if (currentTempC !== 0) {
-      mobileToday.style.display = "flex";
-      const mTemp = document.querySelector(".m-temp");
-      mTemp.innerHTML = currentTempC + `<span class="unit">°c</span>`;
-      mTemp.onclick = toggleTemp;
-    }
-  } else {
+  if (window.innerWidth <= 480 && lastWeatherData) {
+    mobileToday.style.display = "flex";
+    document.querySelector(".m-city").innerHTML = lastWeatherData.name;
+    document.querySelector(".m-temp").innerHTML =
+      currentTempC + `<span class="unit">°c</span>`;
+    document.querySelector(".m-temp").onclick = toggleTemp;
+    document.querySelector(".m-feels").innerHTML =
+      "Feels like " + Math.round(lastWeatherData.main.feels_like) + "°c";
+    document.querySelector(".m-condition").innerHTML =
+      lastWeatherData.weather[0].main;
+    document.querySelector(".m-humidity").innerHTML =
+      `<i class="bx bx-air"></i> ${lastWeatherData.main.humidity}% Humidity`;
+    document.querySelector(".m-wind").innerHTML =
+      `<i class="bx bx-wind"></i> ${lastWeatherData.wind.speed} km/h Wind`;
+  } else if (window.innerWidth > 480) {
     mobileToday.style.display = "none";
   }
 });
