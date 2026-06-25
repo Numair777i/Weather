@@ -2,7 +2,6 @@ const apiUrl = "/api/weather?city=";
 const forecastUrl = "/api/forecast?city=";
 const bgAnimation = document.getElementById("bg-animation");
 
-// cache all DOM refs once
 const dom = {
   searchBox: document.querySelector(".search input"),
   tempEl: document.querySelector(".temp"),
@@ -36,8 +35,11 @@ const dom = {
 
 let currentTempC = 0;
 let lastWeatherData = null;
+let lastForecastList = []; // full 16-day hourly list
+let cityTimezone = "auto"; // IANA timezone string e.g. "Asia/Kolkata"
 let isCelsius = true;
 let lastCondition = null;
+let activeDayKey = null; // which forecast day is selected
 
 dom.tempEl.onclick = toggleTemp;
 dom.mTemp.onclick = toggleTemp;
@@ -74,12 +76,34 @@ function getTip(condition, temp, humidity, wind) {
   return "😊 Pleasant weather, enjoy your day";
 }
 
+// Format a local-city time string "2024-06-25T16:00" → "4 PM"
+// We parse it as local time directly — no UTC conversion needed because
+// Open-Meteo already returns times in the city's local timezone.
+function formatHourLabel(timeStr) {
+  const [, timePart] = timeStr.split("T");
+  const [hStr] = timePart.split(":");
+  const h = parseInt(hStr, 10);
+  if (h === 0) return "12 AM";
+  if (h < 12) return h + " AM";
+  if (h === 12) return "12 PM";
+  return h - 12 + " PM";
+}
+
+// Get "YYYY-MM-DD" date part from a time_str
+function dateOf(timeStr) {
+  return timeStr.split("T")[0];
+}
+
+// Get hour 0-23 from a time_str
+function hourOf(timeStr) {
+  return parseInt(timeStr.split("T")[1].split(":")[0], 10);
+}
+
 async function checkweather(city) {
   try {
     const res = await fetch(apiUrl + encodeURIComponent(city));
     const data = await res.json();
 
-    // cod is 200 (number) on success, "404"/"400" (string) on error
     if (
       data.cod === "404" ||
       data.cod === "400" ||
@@ -92,8 +116,8 @@ async function checkweather(city) {
 
     clearError();
     lastWeatherData = data;
+    cityTimezone = data.timezone || "auto";
 
-    // flash success glow on search bars
     dom.searchBox.classList.add("success");
     dom.floatingInput.classList.add("success");
     setTimeout(() => {
@@ -113,7 +137,6 @@ async function checkweather(city) {
     const windFeel = getWindFeel(wind);
     const humidityFeel = getHumidityFeel(humidity);
 
-    // update desktop
     dom.city.textContent = data.name;
     dom.tempEl.innerHTML = currentTempC + '<span class="unit">°c</span>';
     dom.feels.textContent = "Feels like " + feelsLike + "°c";
@@ -126,7 +149,6 @@ async function checkweather(city) {
     dom.windFeel.textContent = windFeel;
     dom.tip.textContent = tip;
 
-    // update mobile only if on small screen
     if (window.innerWidth <= 480) {
       dom.mobileToday.style.display = "flex";
       dom.mTemp.innerHTML = currentTempC + '<span class="unit">°c</span>';
@@ -138,7 +160,6 @@ async function checkweather(city) {
       dom.mTip.textContent = tip;
     }
 
-    // only rebuild bg if condition changed
     if (condition !== lastCondition) {
       setBackground(condition);
       lastCondition = condition;
@@ -190,35 +211,106 @@ function clearError() {
 async function fetchForecast(city) {
   const res = await fetch(forecastUrl + encodeURIComponent(city));
   const data = await res.json();
+  if (!data.list) return;
 
-  // pick one reading per day around noon
-  const daily = {};
-  data.list.forEach((item) => {
-    const date = new Date(item.dt * 1000);
-    const day = date.toLocaleDateString("en-US", { weekday: "short" });
-    const hour = date.getHours();
-    if (!daily[day] && hour >= 11 && hour <= 14) daily[day] = item;
+  lastForecastList = data.list;
+  if (data.timezone) cityTimezone = data.timezone;
+
+  // Work out today's date in the city's local time
+  // We use the first entry's time_str date as "today"
+  const todayDate = dateOf(data.list[0].time_str);
+  activeDayKey = todayDate;
+
+  buildForecastDays(data.list, todayDate);
+
+  // For today: show from current hour onwards
+  showHourlyForDay(todayDate, true);
+}
+
+// Build the 5 clickable forecast day rows
+function buildForecastDays(list, todayDate) {
+  // Group by date, pick noon slot for display temp/condition
+  const days = {};
+  list.forEach((item) => {
+    const d = dateOf(item.time_str);
+    const h = hourOf(item.time_str);
+    if (!days[d]) days[d] = { slots: [] };
+    days[d].slots.push(item);
+    // prefer noon slot for display
+    if (h === 12 || !days[d].noon) days[d].noon = item;
   });
 
   const frag = document.createDocumentFragment();
-  Object.entries(daily)
-    .slice(0, 5)
-    .forEach(([day, item]) => {
+  Object.entries(days)
+    .slice(0, 7)
+    .forEach(([date, dayData]) => {
+      const item = dayData.noon || dayData.slots[0];
       const condition = item.weather[0].main;
       const temp = Math.round(item.main.temp);
+
+      // Label: "Today", or short weekday
+      const jsDate = new Date(date + "T12:00:00");
+      const label =
+        date === todayDate
+          ? "Today"
+          : jsDate.toLocaleDateString("en-US", { weekday: "short" });
+
       const div = document.createElement("div");
-      div.className = "forecast-day";
-      div.innerHTML = `<span class="day-name">${day}</span><i class="${getIcon(condition)}"></i><span class="day-temp" data-tempc="${temp}">${temp}°c</span><span class="day-condition">${condition}</span>`;
+      div.className = "forecast-day" + (date === activeDayKey ? " active" : "");
+      div.dataset.date = date;
+      div.innerHTML = `<span class="day-name">${label}</span><i class="${getIcon(condition)}"></i><span class="day-temp" data-tempc="${temp}">${temp}°c</span><span class="day-condition">${condition}</span>`;
+
+      div.addEventListener("click", () => {
+        activeDayKey = date;
+        // update active highlight
+        dom.forecast
+          .querySelectorAll(".forecast-day")
+          .forEach((el) =>
+            el.classList.toggle("active", el.dataset.date === date),
+          );
+        showHourlyForDay(date, date === todayDate);
+      });
+
       frag.appendChild(div);
     });
+
   dom.forecast.innerHTML = "";
   dom.forecast.appendChild(frag);
-
-  renderHourly(data.list.slice(0, 8));
 }
 
-function renderHourly(slots) {
-  const cols = buildHourlyCols(slots);
+// Show hourly strip for a given date
+// If isToday=true, start from the current hour; otherwise show full 24h
+function showHourlyForDay(date, isToday) {
+  // current hour in city's local time — derive from first slot's time_str
+  // We find the slot whose time_str matches "now" closely
+  const nowHour = isToday ? getCurrentCityHour() : 0;
+
+  const slots = lastForecastList.filter((item) => {
+    const d = dateOf(item.time_str);
+    const h = hourOf(item.time_str);
+    return d === date && h >= nowHour;
+  });
+
+  renderHourly(slots, isToday);
+}
+
+// Derive current hour in city local time using the timezone string
+function getCurrentCityHour() {
+  try {
+    const now = new Date();
+    const localStr = now.toLocaleString("en-US", {
+      timeZone: cityTimezone,
+      hour: "numeric",
+      hour12: false,
+    });
+    return parseInt(localStr, 10) % 24;
+  } catch {
+    return new Date().getHours();
+  }
+}
+
+function renderHourly(slots, isToday) {
+  const cols = buildHourlyCols(slots, isToday);
 
   const dFrag = document.createDocumentFragment();
   cols.forEach((col) => dFrag.appendChild(col.cloneNode(true)));
@@ -234,30 +326,16 @@ function renderHourly(slots) {
   else dom.mobileHourlyCard.classList.add("visible");
 }
 
-function buildHourlyCols(slots) {
+function buildHourlyCols(slots, isToday) {
   const cols = [];
-  const nowCondition = lastWeatherData.weather[0].main;
-  const tempStr = isCelsius
-    ? currentTempC + "°c"
-    : Math.round((currentTempC * 9) / 5 + 32) + "°f";
+  const toF = (c) => Math.round((c * 9) / 5 + 32);
 
-  // "Now" column
-  const nowCol = document.createElement("div");
-  nowCol.className = "hour-col";
-  nowCol.innerHTML = `<span class="hour-label">Now</span><i class="${getIcon(nowCondition)}"></i><span class="hour-temp" data-tempc="${currentTempC}">${tempStr}</span>`;
-  cols.push(nowCol);
-
-  slots.slice(1, 8).forEach((item) => {
-    const date = new Date(item.dt * 1000);
+  slots.forEach((item, idx) => {
     const condition = item.weather[0].main;
     const temp = Math.round(item.main.temp);
-    const label = date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      hour12: true,
-    });
-    const tStr = isCelsius
-      ? temp + "°c"
-      : Math.round((temp * 9) / 5 + 32) + "°f";
+    const tStr = isCelsius ? temp + "°c" : toF(temp) + "°f";
+    const label = isToday && idx === 0 ? "Now" : formatHourLabel(item.time_str);
+
     const col = document.createElement("div");
     col.className = "hour-col";
     col.innerHTML = `<span class="hour-label">${label}</span><i class="${getIcon(condition)}"></i><span class="hour-temp" data-tempc="${temp}">${tStr}</span>`;
@@ -266,6 +344,8 @@ function buildHourlyCols(slots) {
 
   return cols;
 }
+
+// ── backgrounds ──────────────────────────────────────────────────────────────
 
 function setBackground(condition) {
   document.body.className = "";
@@ -311,7 +391,6 @@ function createSun() {
   sun.className = "sun";
   bgAnimation.appendChild(sun);
 }
-
 function createClouds(count) {
   const frag = document.createDocumentFragment();
   const bumps = [
@@ -332,7 +411,6 @@ function createClouds(count) {
   }
   bgAnimation.appendChild(frag);
 }
-
 function createDrops(count, type) {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < count; i++) {
@@ -343,7 +421,6 @@ function createDrops(count, type) {
   }
   bgAnimation.appendChild(frag);
 }
-
 function createSnow(count) {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < count; i++) {
@@ -355,7 +432,6 @@ function createSnow(count) {
   }
   bgAnimation.appendChild(frag);
 }
-
 function createLightning() {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < 3; i++) {
@@ -365,7 +441,6 @@ function createLightning() {
   }
   bgAnimation.appendChild(frag);
 }
-
 function createMist() {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < 6; i++) {
@@ -377,7 +452,8 @@ function createMist() {
   bgAnimation.appendChild(frag);
 }
 
-// on load: clear inputs, load Delhi, focus search on desktop
+// ── init & events ─────────────────────────────────────────────────────────────
+
 window.addEventListener("load", () => {
   dom.searchBox.value = "";
   dom.floatingInput.value = "";
@@ -415,7 +491,6 @@ dom.floatingInput.addEventListener("input", () => {
   }, 400);
 });
 
-// sync mobile/desktop view on resize or orientation change
 function syncMobileView() {
   if (!lastWeatherData) return;
   const isMobile = window.innerWidth <= 480;
@@ -450,7 +525,6 @@ function syncMobileView() {
   }
 }
 
-// throttle resize — fires at most once per 150ms
 let resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
@@ -460,7 +534,6 @@ window.addEventListener("orientationchange", () => {
   setTimeout(syncMobileView, 150);
 });
 
-// register service worker for PWA
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js");

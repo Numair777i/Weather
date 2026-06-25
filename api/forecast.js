@@ -1,7 +1,6 @@
 // pages/api/forecast.js
-// Geocodes the city/area name with Nominatim, then fetches a 5-day / hourly
-// forecast from Open-Meteo. Response is shaped like OWM's /forecast so
-// app.js's fetchForecast() keeps working without any changes.
+// Geocodes with Nominatim, fetches 16-day hourly forecast from Open-Meteo.
+// Returns timezone so app.js can format times correctly for the city.
 
 export default async function handler(req, res) {
   const city = req.query.city;
@@ -22,13 +21,13 @@ export default async function handler(req, res) {
 
     const { lat, lon } = geoData[0];
 
-    // 2. Fetch hourly forecast — 5 days = 120 hours
+    // 2. Fetch hourly forecast — 16 days (max free tier)
     const forecastRes = await fetch(
       `https://api.open-meteo.com/v1/forecast?` +
         `latitude=${lat}&longitude=${lon}` +
         `&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,` +
         `wind_speed_10m,weather_code,precipitation_probability` +
-        `&wind_speed_unit=kmh&timezone=auto&forecast_days=5`,
+        `&wind_speed_unit=kmh&timezone=auto&forecast_days=16`,
     );
     const forecastData = await forecastRes.json();
 
@@ -40,14 +39,14 @@ export default async function handler(req, res) {
 
     const h = forecastData.hourly;
 
-    // Build OWM-style list — one entry per hour
+    // Build list — one entry per hour, time string kept as-is (local to city)
     const list = h.time.map((timeStr, i) => {
-      const dt = Math.floor(new Date(timeStr).getTime() / 1000);
       const code = h.weather_code[i];
       const condition = wmoToCondition(code);
 
       return {
-        dt,
+        dt: Math.floor(new Date(timeStr).getTime() / 1000),
+        time_str: timeStr, // "2024-06-25T16:00" — local city time, no UTC offset confusion
         main: {
           temp: h.temperature_2m[i],
           feels_like: h.apparent_temperature[i],
@@ -59,7 +58,12 @@ export default async function handler(req, res) {
       };
     });
 
-    res.status(200).json({ cod: "200", list });
+    res.status(200).json({
+      cod: "200",
+      timezone: forecastData.timezone, // e.g. "Asia/Kolkata"
+      timezone_offset: forecastData.utc_offset_seconds,
+      list,
+    });
   } catch (err) {
     console.error("forecast handler error:", err);
     res.status(500).json({ cod: "500", message: "Internal server error" });

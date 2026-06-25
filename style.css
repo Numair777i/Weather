@@ -581,9 +581,24 @@ body.clear .search input::placeholder {
   border-radius: 12px;
   padding: 10px 15px;
   gap: 10px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
 }
+
+forecast-day:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(3px);
+}
+.forecast-day.active {
+  background: rgba(255, 255, 255, 0.22);
+  border-left: 3px solid rgba(255, 255, 255, 0.7);
+}
+
 body.clear .forecast-day {
   background: rgba(255, 252, 245, 0.1);
+  border-left: 3px solid rgba(255, 255, 255, 0.6);
 }
 .forecast-day .day-name {
   font-size: 16px;

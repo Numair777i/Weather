@@ -58,6 +58,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       cod: 200,
       name: locationName,
+      timezone: weatherData.timezone, // e.g. "Asia/Kolkata"
+      timezone_offset: weatherData.utc_offset_seconds,
       coord: { lat: parseFloat(lat), lon: parseFloat(lon) },
       main: {
         temp: c.temperature_2m,
