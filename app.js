@@ -1,5 +1,5 @@
-const apiUrl = "/api/weather?";
-const forecastUrl = "/api/forecast?";
+const apiUrl = "/api/weather?city=";
+const forecastUrl = "/api/forecast?city=";
 const bgAnimation = document.getElementById("bg-animation");
 
 // cache all DOM refs once
@@ -74,12 +74,18 @@ function getTip(condition, temp, humidity, wind) {
   return "😊 Pleasant weather, enjoy your day";
 }
 
-async function checkweather(cityQuery) {
+async function checkweather(city) {
   try {
-    const res = await fetch(apiUrl + cityQuery);
+    const res = await fetch(apiUrl + encodeURIComponent(city));
     const data = await res.json();
 
-    if (data.cod === "404" || data.cod === "400") {
+    // cod is 200 (number) on success, "404"/"400" (string) on error
+    if (
+      data.cod === "404" ||
+      data.cod === "400" ||
+      data.cod === 404 ||
+      data.cod === 400
+    ) {
       showError("City not found. Try again.");
       return;
     }
@@ -138,7 +144,7 @@ async function checkweather(cityQuery) {
       lastCondition = condition;
     }
 
-    fetchForecast(cityQuery);
+    fetchForecast(city);
   } catch (err) {
     showError("Something went wrong. Try again.");
   }
@@ -181,8 +187,8 @@ function clearError() {
   }
 }
 
-async function fetchForecast(cityQuery) {
-  const res = await fetch(forecastUrl + cityQuery);
+async function fetchForecast(city) {
+  const res = await fetch(forecastUrl + encodeURIComponent(city));
   const data = await res.json();
 
   // pick one reading per day around noon
@@ -375,7 +381,7 @@ function createMist() {
 window.addEventListener("load", () => {
   dom.searchBox.value = "";
   dom.floatingInput.value = "";
-  checkweather("city=Delhi");
+  checkweather("Delhi");
   if (window.innerWidth > 768) dom.searchBox.focus();
 });
 
@@ -388,7 +394,7 @@ dom.searchBox.addEventListener("input", () => {
     const city = dom.searchBox.value.replace(/[^a-zA-Z\s]/g, "").trim();
     if (city) {
       dom.searchBox.classList.add("loading");
-      checkweather(`city=${city}`).finally(() =>
+      checkweather(city).finally(() =>
         dom.searchBox.classList.remove("loading"),
       );
     }
@@ -402,7 +408,7 @@ dom.floatingInput.addEventListener("input", () => {
     const city = dom.floatingInput.value.replace(/[^a-zA-Z\s]/g, "").trim();
     if (city) {
       dom.floatingInput.classList.add("loading");
-      checkweather(`city=${city}`).finally(() =>
+      checkweather(city).finally(() =>
         dom.floatingInput.classList.remove("loading"),
       );
     }
