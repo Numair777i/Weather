@@ -35,11 +35,11 @@ const dom = {
 
 let currentTempC = 0;
 let lastWeatherData = null;
-let lastForecastList = []; // full 16-day hourly list
-let cityTimezone = "auto"; // IANA timezone string e.g. "Asia/Kolkata"
+let lastForecastList = [];
+let cityTimezone = "auto";
 let isCelsius = true;
 let lastCondition = null;
-let activeDayKey = null; // which forecast day is selected
+let activeDayKey = null;
 
 dom.tempEl.onclick = toggleTemp;
 dom.mTemp.onclick = toggleTemp;
@@ -76,9 +76,6 @@ function getTip(condition, temp, humidity, wind) {
   return "😊 Pleasant weather, enjoy your day";
 }
 
-// Format a local-city time string "2024-06-25T16:00" → "4 PM"
-// We parse it as local time directly — no UTC conversion needed because
-// Open-Meteo already returns times in the city's local timezone.
 function formatHourLabel(timeStr) {
   const [, timePart] = timeStr.split("T");
   const [hStr] = timePart.split(":");
@@ -89,12 +86,10 @@ function formatHourLabel(timeStr) {
   return h - 12 + " PM";
 }
 
-// Get "YYYY-MM-DD" date part from a time_str
 function dateOf(timeStr) {
   return timeStr.split("T")[0];
 }
 
-// Get hour 0-23 from a time_str
 function hourOf(timeStr) {
   return parseInt(timeStr.split("T")[1].split(":")[0], 10);
 }
@@ -216,27 +211,108 @@ async function fetchForecast(city) {
   lastForecastList = data.list;
   if (data.timezone) cityTimezone = data.timezone;
 
-  // Work out today's date in the city's local time
-  // We use the first entry's time_str date as "today"
   const todayDate = dateOf(data.list[0].time_str);
   activeDayKey = todayDate;
 
   buildForecastDays(data.list, todayDate);
-
-  // For today: show from current hour onwards
   showHourlyForDay(todayDate, true);
 }
 
-// Build the 5 clickable forecast day rows
+// ─── KEY FIX: when a future day is clicked, update the desktop left panel ───
+function updateTodayPanel(date, isToday) {
+  // Find the noon slot (or first slot) for this date to display its details
+  const slots = lastForecastList.filter(
+    (item) => dateOf(item.time_str) === date,
+  );
+  if (!slots.length) return;
+
+  const noonSlot =
+    slots.find((item) => hourOf(item.time_str) === 12) || slots[0];
+  const condition = noonSlot.weather[0].main;
+  const temp = Math.round(noonSlot.main.temp);
+  const feelsLike = Math.round(noonSlot.main.feels_like);
+  const humidity = noonSlot.main.humidity;
+  const wind = noonSlot.wind.speed;
+  const tip = getTip(condition, temp, humidity, wind);
+  const windFeel = getWindFeel(wind);
+  const humidityFeel = getHumidityFeel(humidity);
+
+  const toF = (c) => Math.round((c * 9) / 5 + 32);
+  const unit = isCelsius ? "°c" : "°f";
+  const displayTemp = isCelsius ? temp : toF(temp);
+  const displayFeels = isCelsius ? feelsLike : toF(feelsLike);
+
+  if (isToday && lastWeatherData) {
+    // For today restore the live current weather data
+    const liveTemp = isCelsius ? currentTempC : toF(currentTempC);
+    const liveUnit = isCelsius ? "°c" : "°f";
+    const liveFeels = isCelsius
+      ? Math.round(lastWeatherData.main.feels_like)
+      : toF(Math.round(lastWeatherData.main.feels_like));
+    dom.tempEl.innerHTML = liveTemp + `<span class="unit">${liveUnit}</span>`;
+    dom.feels.textContent = "Feels like " + liveFeels + liveUnit;
+    dom.condition.textContent = lastWeatherData.weather[0].main;
+    dom.humidity.textContent = lastWeatherData.main.humidity + "%";
+    dom.humidityFeel.textContent = getHumidityFeel(
+      lastWeatherData.main.humidity,
+    );
+    dom.wind.textContent = lastWeatherData.wind.speed + " km/h";
+    dom.windFeel.textContent = getWindFeel(lastWeatherData.wind.speed);
+    dom.tip.textContent = getTip(
+      lastWeatherData.weather[0].main,
+      lastWeatherData.main.temp,
+      lastWeatherData.main.humidity,
+      lastWeatherData.wind.speed,
+    );
+  } else {
+    // Show the forecast day's details in the left panel
+    dom.tempEl.innerHTML = displayTemp + `<span class="unit">${unit}</span>`;
+    dom.feels.textContent = "Feels like " + displayFeels + unit;
+    dom.condition.textContent = condition;
+    dom.humidity.textContent = humidity + "%";
+    dom.humidityFeel.textContent = humidityFeel;
+    dom.wind.textContent = wind + " km/h";
+    dom.windFeel.textContent = windFeel;
+    dom.tip.textContent = tip;
+  }
+
+  // Mobile: update mobile-today panel too
+  if (window.innerWidth <= 480) {
+    if (isToday && lastWeatherData) {
+      const liveTemp = isCelsius ? currentTempC : toF(currentTempC);
+      const liveUnit = isCelsius ? "°c" : "°f";
+      const liveFeels = isCelsius
+        ? Math.round(lastWeatherData.main.feels_like)
+        : toF(Math.round(lastWeatherData.main.feels_like));
+      dom.mTemp.innerHTML = liveTemp + `<span class="unit">${liveUnit}</span>`;
+      dom.mFeels.textContent = "Feels like " + liveFeels + liveUnit;
+      dom.mCondition.textContent = lastWeatherData.weather[0].main;
+      dom.mHumidity.innerHTML = `<i class="bx bx-air"></i> ${lastWeatherData.main.humidity}% Humidity · ${getHumidityFeel(lastWeatherData.main.humidity)}`;
+      dom.mWind.innerHTML = `<i class="bx bx-wind"></i> ${lastWeatherData.wind.speed} km/h Wind · ${getWindFeel(lastWeatherData.wind.speed)}`;
+      dom.mTip.textContent = getTip(
+        lastWeatherData.weather[0].main,
+        lastWeatherData.main.temp,
+        lastWeatherData.main.humidity,
+        lastWeatherData.wind.speed,
+      );
+    } else {
+      dom.mTemp.innerHTML = displayTemp + `<span class="unit">${unit}</span>`;
+      dom.mFeels.textContent = "Feels like " + displayFeels + unit;
+      dom.mCondition.textContent = condition;
+      dom.mHumidity.innerHTML = `<i class="bx bx-air"></i> ${humidity}% Humidity · ${humidityFeel}`;
+      dom.mWind.innerHTML = `<i class="bx bx-wind"></i> ${wind} km/h Wind · ${windFeel}`;
+      dom.mTip.textContent = tip;
+    }
+  }
+}
+
 function buildForecastDays(list, todayDate) {
-  // Group by date, pick noon slot for display temp/condition
   const days = {};
   list.forEach((item) => {
     const d = dateOf(item.time_str);
     const h = hourOf(item.time_str);
     if (!days[d]) days[d] = { slots: [] };
     days[d].slots.push(item);
-    // prefer noon slot for display
     if (h === 12 || !days[d].noon) days[d].noon = item;
   });
 
@@ -248,7 +324,6 @@ function buildForecastDays(list, todayDate) {
       const condition = item.weather[0].main;
       const temp = Math.round(item.main.temp);
 
-      // Label: "Today", or short weekday
       const jsDate = new Date(date + "T12:00:00");
       const label =
         date === todayDate
@@ -261,14 +336,31 @@ function buildForecastDays(list, todayDate) {
       div.innerHTML = `<span class="day-name">${label}</span><i class="${getIcon(condition)}"></i><span class="day-temp" data-tempc="${temp}">${temp}°c</span><span class="day-condition">${condition}</span>`;
 
       div.addEventListener("click", () => {
+        const isToday = date === todayDate;
         activeDayKey = date;
-        // update active highlight
+
+        // Update active highlight
         dom.forecast
           .querySelectorAll(".forecast-day")
           .forEach((el) =>
             el.classList.toggle("active", el.dataset.date === date),
           );
-        showHourlyForDay(date, date === todayDate);
+
+        // Update detail panels (left panel on desktop, top section on mobile)
+        updateTodayPanel(date, isToday);
+
+        // Show hourly for this day
+        showHourlyForDay(date, isToday);
+
+        // On mobile, scroll the hourly card into view smoothly
+        if (window.innerWidth <= 480) {
+          setTimeout(() => {
+            dom.mobileHourlyCard.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            });
+          }, 100);
+        }
       });
 
       frag.appendChild(div);
@@ -278,11 +370,7 @@ function buildForecastDays(list, todayDate) {
   dom.forecast.appendChild(frag);
 }
 
-// Show hourly strip for a given date
-// If isToday=true, start from the current hour; otherwise show full 24h
 function showHourlyForDay(date, isToday) {
-  // current hour in city's local time — derive from first slot's time_str
-  // We find the slot whose time_str matches "now" closely
   const nowHour = isToday ? getCurrentCityHour() : 0;
 
   const slots = lastForecastList.filter((item) => {
@@ -294,7 +382,6 @@ function showHourlyForDay(date, isToday) {
   renderHourly(slots, isToday);
 }
 
-// Derive current hour in city local time using the timezone string
 function getCurrentCityHour() {
   try {
     const now = new Date();
@@ -312,18 +399,32 @@ function getCurrentCityHour() {
 function renderHourly(slots, isToday) {
   const cols = buildHourlyCols(slots, isToday);
 
+  // Desktop hourly strip
+  dom.hourlyStrip.innerHTML = "";
   const dFrag = document.createDocumentFragment();
   cols.forEach((col) => dFrag.appendChild(col.cloneNode(true)));
-  dom.hourlyStrip.innerHTML = "";
   dom.hourlyStrip.appendChild(dFrag);
 
+  // Mobile hourly strip
+  dom.mobileHourlyStrip.innerHTML = "";
   const mFrag = document.createDocumentFragment();
   cols.forEach((col) => mFrag.appendChild(col.cloneNode(true)));
-  dom.mobileHourlyStrip.innerHTML = "";
   dom.mobileHourlyStrip.appendChild(mFrag);
 
-  if (window.innerWidth > 480) dom.hourlyPanel.classList.add("open");
-  else dom.mobileHourlyCard.classList.add("visible");
+  // Show the correct panel depending on screen size
+  if (window.innerWidth > 480) {
+    // Desktop/tablet: slide-in panel below card
+    // Force re-trigger transition by briefly removing open, then re-adding
+    dom.hourlyPanel.classList.remove("open");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        dom.hourlyPanel.classList.add("open");
+      });
+    });
+  } else {
+    // Mobile: show the card inside mobile-today section
+    dom.mobileHourlyCard.classList.add("visible");
+  }
 }
 
 function buildHourlyCols(slots, isToday) {

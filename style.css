@@ -263,7 +263,7 @@ body.clear .mobile-hourly-card {
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-/* slightly lighter glass on rain — stops the dark blue bleed */
+/* slightly lighter glass on rain */
 body.rain .card,
 body.rain .hourly-panel {
   background: linear-gradient(
@@ -573,6 +573,8 @@ body.clear .search input::placeholder {
   flex-direction: column;
   gap: 15px;
 }
+
+/* FIX: was "forecast-day:hover" (missing dot) — cursor never showed */
 .forecast-day {
   display: flex;
   align-items: center;
@@ -581,15 +583,21 @@ body.clear .search input::placeholder {
   border-radius: 12px;
   padding: 10px 15px;
   gap: 10px;
-  cursor: pointer;
+  cursor: pointer; /* <-- pointer cursor on all screens */
   transition:
     background 0.2s ease,
     transform 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent; /* removes grey flash on mobile tap */
 }
 
-forecast-day:hover {
+.forecast-day:hover {
   background: rgba(255, 255, 255, 0.18);
   transform: translateX(3px);
+}
+.forecast-day:active {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateX(2px) scale(0.99);
 }
 .forecast-day.active {
   background: rgba(255, 255, 255, 0.22);
