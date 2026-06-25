@@ -94,6 +94,43 @@ function hourOf(timeStr) {
   return parseInt(timeStr.split("T")[1].split(":")[0], 10);
 }
 
+// ── FIXED: get current city hour reliably ────────────────────────────────────
+// toLocaleString with hour12:false returns "24" at midnight on some engines,
+// and on en-US can return "5 PM" style strings making parseInt give 5 not 17.
+// Use Intl.DateTimeFormat with hourCycle h23 which always gives 0-23 integers.
+function getCurrentCityHour() {
+  try {
+    const now = new Date();
+    // hourCycle: "h23" guarantees 0–23 output, no AM/PM ambiguity
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: cityTimezone,
+      hour: "numeric",
+      hourCycle: "h23",
+    }).formatToParts(now);
+    const hourPart = parts.find((p) => p.type === "hour");
+    if (hourPart) return parseInt(hourPart.value, 10);
+  } catch {}
+  // fallback: use UTC offset stored from API response
+  return new Date().getHours();
+}
+
+// ── also fix todayDate detection ─────────────────────────────────────────────
+// Get today's date string in the city's local timezone (YYYY-MM-DD)
+function getCityTodayDate() {
+  try {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: cityTimezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now); // en-CA gives "YYYY-MM-DD" format natively
+    return parts;
+  } catch {}
+  // fallback: use first entry in forecast list
+  return lastForecastList.length ? dateOf(lastForecastList[0].time_str) : null;
+}
+
 async function checkweather(city) {
   try {
     const res = await fetch(apiUrl + encodeURIComponent(city));
@@ -211,16 +248,16 @@ async function fetchForecast(city) {
   lastForecastList = data.list;
   if (data.timezone) cityTimezone = data.timezone;
 
-  const todayDate = dateOf(data.list[0].time_str);
+  // Use real city local date, not just first entry's date
+  const todayDate = getCityTodayDate() || dateOf(data.list[0].time_str);
   activeDayKey = todayDate;
 
   buildForecastDays(data.list, todayDate);
   showHourlyForDay(todayDate, true);
 }
 
-// ─── KEY FIX: when a future day is clicked, update the desktop left panel ───
+// Update the weather details panel (left on desktop, top on mobile) for a given day
 function updateTodayPanel(date, isToday) {
-  // Find the noon slot (or first slot) for this date to display its details
   const slots = lastForecastList.filter(
     (item) => dateOf(item.time_str) === date,
   );
@@ -243,9 +280,8 @@ function updateTodayPanel(date, isToday) {
   const displayFeels = isCelsius ? feelsLike : toF(feelsLike);
 
   if (isToday && lastWeatherData) {
-    // For today restore the live current weather data
     const liveTemp = isCelsius ? currentTempC : toF(currentTempC);
-    const liveUnit = isCelsius ? "°c" : "°f";
+    const liveUnit = unit;
     const liveFeels = isCelsius
       ? Math.round(lastWeatherData.main.feels_like)
       : toF(Math.round(lastWeatherData.main.feels_like));
@@ -265,7 +301,6 @@ function updateTodayPanel(date, isToday) {
       lastWeatherData.wind.speed,
     );
   } else {
-    // Show the forecast day's details in the left panel
     dom.tempEl.innerHTML = displayTemp + `<span class="unit">${unit}</span>`;
     dom.feels.textContent = "Feels like " + displayFeels + unit;
     dom.condition.textContent = condition;
@@ -276,16 +311,15 @@ function updateTodayPanel(date, isToday) {
     dom.tip.textContent = tip;
   }
 
-  // Mobile: update mobile-today panel too
+  // Mobile panel
   if (window.innerWidth <= 480) {
     if (isToday && lastWeatherData) {
       const liveTemp = isCelsius ? currentTempC : toF(currentTempC);
-      const liveUnit = isCelsius ? "°c" : "°f";
       const liveFeels = isCelsius
         ? Math.round(lastWeatherData.main.feels_like)
         : toF(Math.round(lastWeatherData.main.feels_like));
-      dom.mTemp.innerHTML = liveTemp + `<span class="unit">${liveUnit}</span>`;
-      dom.mFeels.textContent = "Feels like " + liveFeels + liveUnit;
+      dom.mTemp.innerHTML = liveTemp + `<span class="unit">${unit}</span>`;
+      dom.mFeels.textContent = "Feels like " + liveFeels + unit;
       dom.mCondition.textContent = lastWeatherData.weather[0].main;
       dom.mHumidity.innerHTML = `<i class="bx bx-air"></i> ${lastWeatherData.main.humidity}% Humidity · ${getHumidityFeel(lastWeatherData.main.humidity)}`;
       dom.mWind.innerHTML = `<i class="bx bx-wind"></i> ${lastWeatherData.wind.speed} km/h Wind · ${getWindFeel(lastWeatherData.wind.speed)}`;
@@ -339,20 +373,15 @@ function buildForecastDays(list, todayDate) {
         const isToday = date === todayDate;
         activeDayKey = date;
 
-        // Update active highlight
         dom.forecast
           .querySelectorAll(".forecast-day")
           .forEach((el) =>
             el.classList.toggle("active", el.dataset.date === date),
           );
 
-        // Update detail panels (left panel on desktop, top section on mobile)
         updateTodayPanel(date, isToday);
-
-        // Show hourly for this day
         showHourlyForDay(date, isToday);
 
-        // On mobile, scroll the hourly card into view smoothly
         if (window.innerWidth <= 480) {
           setTimeout(() => {
             dom.mobileHourlyCard.scrollIntoView({
@@ -379,42 +408,28 @@ function showHourlyForDay(date, isToday) {
     return d === date && h >= nowHour;
   });
 
-  renderHourly(slots, isToday);
-}
+  // If isToday and we somehow got no slots (e.g. late night), show midnight onwards
+  const finalSlots = slots.length
+    ? slots
+    : lastForecastList.filter((item) => dateOf(item.time_str) === date);
 
-function getCurrentCityHour() {
-  try {
-    const now = new Date();
-    const localStr = now.toLocaleString("en-US", {
-      timeZone: cityTimezone,
-      hour: "numeric",
-      hour12: false,
-    });
-    return parseInt(localStr, 10) % 24;
-  } catch {
-    return new Date().getHours();
-  }
+  renderHourly(finalSlots, isToday);
 }
 
 function renderHourly(slots, isToday) {
   const cols = buildHourlyCols(slots, isToday);
 
-  // Desktop hourly strip
   dom.hourlyStrip.innerHTML = "";
   const dFrag = document.createDocumentFragment();
   cols.forEach((col) => dFrag.appendChild(col.cloneNode(true)));
   dom.hourlyStrip.appendChild(dFrag);
 
-  // Mobile hourly strip
   dom.mobileHourlyStrip.innerHTML = "";
   const mFrag = document.createDocumentFragment();
   cols.forEach((col) => mFrag.appendChild(col.cloneNode(true)));
   dom.mobileHourlyStrip.appendChild(mFrag);
 
-  // Show the correct panel depending on screen size
   if (window.innerWidth > 480) {
-    // Desktop/tablet: slide-in panel below card
-    // Force re-trigger transition by briefly removing open, then re-adding
     dom.hourlyPanel.classList.remove("open");
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -422,7 +437,6 @@ function renderHourly(slots, isToday) {
       });
     });
   } else {
-    // Mobile: show the card inside mobile-today section
     dom.mobileHourlyCard.classList.add("visible");
   }
 }
@@ -446,7 +460,7 @@ function buildHourlyCols(slots, isToday) {
   return cols;
 }
 
-// ── backgrounds ──────────────────────────────────────────────────────────────
+// ── backgrounds ───────────────────────────────────────────────────────────────
 
 function setBackground(condition) {
   document.body.className = "";
